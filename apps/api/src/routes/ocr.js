@@ -102,60 +102,18 @@ router.post('/start', upload.single('image'), async (req, res) => {
           }
         }
 
-        // 4) If usable, compute risk vs user's active meds & auto-save prescription
-        let saved = null;
         let messages = [];
-        if (usable && req.user?.id && parsed.drug && parsed.doseMg != null) {
-          const now = new Date();
-
-          // Fetch active prescriptions for this user
-          const active = await Prescription.find({
-            userId: req.user.id,
-            $or: [{ endsAt: null }, { endsAt: { $gt: now } }],
-          }).lean();
-
-          // Build combined meds list (existing + new)
-          const meds = [
-            ...active.map((m) => ({
-              drug: m.drug,
-              doseMg: m.doseMg,
-              frequencyPerDay: m.frequencyPerDay,
-            })),
-            {
-              drug: parsed.drug,
-              doseMg: parsed.doseMg,
-              frequencyPerDay: parsed.frequencyPerDay || 1,
-            },
-          ];
-
-          // Run rules (interactions / overdose / food). Extend rules.json as needed.
-          messages = runChecks({ meds });
-
-          // Simple extra timing note if same drug is already active
-          if (
-            active.some(
-              (m) => m.drug.toLowerCase() === parsed.drug.toLowerCase()
-            )
-          ) {
-            messages.push({
-              type: 'timing',
-              severity: 'info',
-              message: `You already have ${parsed.drug} active. Ensure timing & total daily dose are appropriate.`,
-            });
+        let medsOut = [];
+        if (usable && parsed) {
+          if (Array.isArray(parsed)) {
+            medsOut = parsed.filter((m) => m.drug && m.doseMg != null);
+          } else if (parsed.drug && parsed.doseMg != null) {
+            medsOut = [parsed];
           }
-
-          // Save prescription
-          saved = await Prescription.create({
-            userId: req.user.id,
-            drug: parsed.drug,
-            doseMg: parsed.doseMg,
-            frequencyPerDay: parsed.frequencyPerDay || 1,
-            startedAt: now,
-            endsAt: null,
-            flags: parsed.flags || {},
-            rawOcr: { text, confidence, wordsCount },
-            source: 'ocr',
-          });
+        }
+        // Optionally run interaction/overdose checks for all parsed meds
+        if (medsOut.length > 0) {
+          messages = runChecks({ meds: medsOut });
         }
 
         // 5) Finalize job
@@ -165,13 +123,9 @@ router.post('/start', upload.single('image'), async (req, res) => {
           status: 'done',
           done: true,
           data: {
-            drug: parsed.drug || null,
-            doseMg: parsed.doseMg ?? null,
-            frequencyPerDay: parsed.frequencyPerDay || 1,
-            flags: parsed.flags || {},
+            meds: medsOut,
             raw: { text, confidence, wordsCount },
             usable: Boolean(usable),
-            savedId: saved ? String(saved._id) : null,
             messages,
           },
         });

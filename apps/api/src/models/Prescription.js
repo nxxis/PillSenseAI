@@ -9,10 +9,11 @@ const PrescriptionSchema = new mongoose.Schema(
       required: true,
     },
     drug: { type: String, required: true },
+    drugKey: { type: String, required: true, index: true },
     doseMg: { type: Number, required: true, min: 0 },
     frequencyPerDay: { type: Number, required: true, min: 1, max: 24 },
+    timing: { type: String, default: null }, // before meals, after meals, etc.
 
-    // timing
     startedAt: { type: Date, default: () => new Date() },
     endsAt: { type: Date, default: null },
 

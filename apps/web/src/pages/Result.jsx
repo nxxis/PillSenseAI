@@ -1,23 +1,31 @@
 // apps/web/src/pages/Result.jsx
 import { useLocation, Link } from 'react-router-dom';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 export default function Result() {
   const { state } = useLocation() || {};
   const parsedInput = state?.parsed;
   const imageUrl = state?.imageUrl;
+  // Support messages from backend (e.g., duplicate prescription info)
+  const messages = parsedInput?.messages || state?.messages || [];
 
-  // normalize to array
+  // Support new backend format: parsedInput.meds (array)
   const meds = useMemo(() => {
     if (!parsedInput) return [];
-    return Array.isArray(parsedInput) ? parsedInput : [parsedInput];
+    if (Array.isArray(parsedInput.meds)) return parsedInput.meds;
+    if (Array.isArray(parsedInput)) return parsedInput;
+    if (parsedInput.drug) return [parsedInput];
+    return [];
   }, [parsedInput]);
+
+  const [addingIdx, setAddingIdx] = useState(null);
+  const [addMsg, setAddMsg] = useState('');
 
   const setReminderDemo = () => {
     alert('(Demo) Reminders are controlled per medicine on the My Meds page.');
   };
 
-  if (!parsedInput || meds.length === 0) {
+  if (!parsedInput) {
     return (
       <section className="card">
         <h2>No result yet</h2>
@@ -29,51 +37,181 @@ export default function Result() {
     );
   }
 
+  if (meds.length === 0) {
+    return (
+      <section className="card">
+        <h2>No medications found</h2>
+        <p>
+          Sorry, we couldn't recognize any medication from your image. Please
+          try a clearer photo or check the label for legibility.
+        </p>
+        <Link to="/upload" className="btn">
+          Try Again
+        </Link>
+      </section>
+    );
+  }
+
   return (
     <section className="card">
-      <h2>Parsed Medications</h2>
+      <section className="card">
+        <h2>Parsed Medications</h2>
 
-      <div className="result-layout">
-        {imageUrl && (
-          <div className="result-image">
-            <img src={imageUrl} alt="Uploaded label" />
-          </div>
-        )}
-
-        <div className="result-info" style={{ display: 'grid', gap: 12 }}>
-          {meds.map((p, i) => (
-            <div key={i} className="pill">
-              <div>
-                <strong>Drug:</strong> {p.drug || '—'}
-              </div>
-              <div>
-                <strong>Dose:</strong> {Number(p.doseMg) || 0} mg
-              </div>
-              <div>
-                <strong>Frequency:</strong> {Number(p.frequencyPerDay) || 1}
-                ×/day
-              </div>
+        <div className="result-layout">
+          {imageUrl && (
+            <div className="result-image">
+              <img src={imageUrl} alt="Uploaded label" />
             </div>
-          ))}
+          )}
 
-          <div className="ai-note">
-            <p>
-              <strong>Heads up:</strong> Interaction/overdose checks &
-              plain-language explanations show up after saving meds. Manage
-              reminders per medicine on the <em>My Meds</em> page.
-            </p>
-          </div>
+          <div className="result-info" style={{ display: 'grid', gap: 12 }}>
+            {meds.length === 1 && (!meds[0].drug || meds[0].drug === '—') ? (
+              <div
+                className="pill"
+                style={{
+                  background: '#fffbe6',
+                  color: '#b45309',
+                  fontWeight: 'bold',
+                  padding: '14px',
+                  borderRadius: 8,
+                  border: '1px solid #fde68a',
+                  marginBottom: 8,
+                }}
+              >
+                Sorry, we couldn't recognize any medication from your image.
+                Please try a clearer photo or check the label for legibility.
+              </div>
+            ) : (
+              meds.map((p, i) => (
+                <div key={i} className="pill" style={{ position: 'relative' }}>
+                  <div>
+                    <strong>Drug:</strong> {p.drug || '—'}
+                  </div>
+                  <div>
+                    <strong>Dose:</strong> {Number(p.doseMg) || 0} mg
+                  </div>
+                  <div>
+                    <strong>Frequency:</strong> {Number(p.frequencyPerDay) || 1}{' '}
+                    ×/day
+                    {p.timing && (
+                      <div>
+                        <strong>Timing:</strong> {p.timing}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    className="btn"
+                    style={{ marginTop: 8, minWidth: 120 }}
+                    disabled={addingIdx === i}
+                    onClick={async () => {
+                      setAddingIdx(i);
+                      setAddMsg('');
+                      try {
+                        const token = localStorage.getItem('ps_token') || '';
+                        const res = await fetch(
+                          `${import.meta.env.VITE_API_URL || ''}/prescriptions`,
+                          {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              ...(token
+                                ? { Authorization: `Bearer ${token}` }
+                                : {}),
+                              timing: p.timing || null,
+                            },
+                            body: JSON.stringify({
+                              drug: p.drug,
+                              doseMg: p.doseMg,
+                              frequencyPerDay: p.frequencyPerDay || 1,
+                            }),
+                          }
+                        );
+                        const data = await res.json();
+                        if (res.ok && data.ok) {
+                          if (data.duplicate) {
+                            setAddMsg(`ℹ️ Already in your meds.`);
+                          } else {
+                            setAddMsg(`✅ Added ${p.drug} to your meds.`);
+                          }
+                        } else {
+                          setAddMsg(data.error || 'Failed to add medication.');
+                        }
+                      } catch (e) {
+                        setAddMsg('Network error.');
+                      } finally {
+                        setAddingIdx(null);
+                      }
+                    }}
+                  >
+                    {addingIdx === i ? 'Adding…' : 'Add to My Meds'}
+                  </button>
+                </div>
+              ))
+            )}
 
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <Link to="/meds" className="btn">
-              Go to My Meds
-            </Link>
-            <button className="btn" onClick={setReminderDemo}>
-              Set reminder
-            </button>
+            {/* Show backend info/warning messages */}
+            {addMsg && (
+              <div
+                style={{
+                  margin: '8px 0',
+                  color: '#059669',
+                  fontWeight: 'bold',
+                }}
+              >
+                {addMsg}
+              </div>
+            )}
+            {Array.isArray(messages) && messages.length > 0 && (
+              <div className="ai-messages" style={{ marginBottom: 12 }}>
+                {messages.map((msg, idx) => (
+                  <div
+                    key={idx}
+                    className={`ai-msg ai-msg-${msg.severity || 'info'}`}
+                    style={{
+                      background:
+                        msg.severity === 'warning' ? '#ffeaea' : '#e6f7ff',
+                      color: msg.severity === 'warning' ? '#b00' : '#0055a5',
+                      fontWeight: 'bold',
+                      fontSize: '1.1em',
+                      border:
+                        '1px solid ' +
+                        (msg.severity === 'warning' ? '#b00' : '#0055a5'),
+                      borderRadius: 6,
+                      padding: '8px 12px',
+                      marginBottom: 8,
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    }}
+                  >
+                    <span style={{ marginRight: 6 }}>
+                      <strong>
+                        {msg.type === 'timing' ? 'Info:' : 'Note:'}
+                      </strong>
+                    </span>
+                    {msg.message}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="ai-note">
+              <p>
+                <strong>Heads up:</strong> Interaction/overdose checks &
+                plain-language explanations show up after saving meds. Manage
+                reminders per medicine on the <em>My Meds</em> page.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <Link to="/meds" className="btn">
+                Go to My Meds
+              </Link>
+              <button className="btn" onClick={setReminderDemo}>
+                Set reminder
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
     </section>
   );
 }
