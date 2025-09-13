@@ -11,6 +11,7 @@ import ocrRouter from './routes/ocr.js';
 import interactionsRouter from './routes/interactions.js';
 import explainRouter from './routes/explain.js';
 import remindersRouter, { startReminderScheduler } from './routes/reminders.js';
+import wss from './ws-server.js';
 import profileRouter from './routes/profile.js';
 import prescriptionsRouter from './routes/prescriptions.js';
 import { requireAuth } from './middleware/requireAuth.js';
@@ -92,6 +93,8 @@ app.use('/api/reminders', remindersRouter); // POST/GET/DELETE + /due
   try {
     await connectDb();
     startReminderScheduler();
+    // Start WebSocket server
+    console.log('WebSocket server running at ws://localhost:5051');
 
     app.listen(PORT, () => {
       console.log(`API server running at http://localhost:${PORT}`);

@@ -1,7 +1,8 @@
 // apps/api/src/routes/reminders.js
 import { Router } from 'express';
 import Joi from 'joi';
-import cron from 'node-cron';
+import schedule from 'node-schedule';
+import { broadcastReminder } from '../ws-server.js';
 import { Reminder } from '../models/Reminder.js';
 
 const router = Router();
@@ -45,19 +46,25 @@ router.post('/', async (req, res) => {
       frequencyPerDay: value.frequencyPerDay,
     };
 
+    // Log received time and server time
+    console.log(
+      '[Reminder POST] Received nextAtISO:',
+      value.nextAtISO,
+      'Server time:',
+      new Date().toISOString()
+    );
     // exact time as set (no buffer)
     let nextAt = new Date(value.nextAtISO);
     if (isNaN(nextAt.getTime())) {
       return res.status(400).json({ ok: false, error: 'invalid_nextAtISO' });
     }
 
-    // If it's already in the past today, schedule for same clock time tomorrow
-    const now = new Date();
-    if (nextAt <= now) {
-      const roll = new Date(nextAt);
-      roll.setDate(roll.getDate() + 1);
-      nextAt = roll;
-    }
+    // Always schedule for the exact selected time, even if in the past or very soon
+    // Log final scheduled time
+    console.log(
+      '[Reminder POST] Final scheduled nextAtISO:',
+      nextAt.toISOString()
+    );
 
     const update = {
       nextAtISO: nextAt.toISOString(),
@@ -94,6 +101,8 @@ router.post('/', async (req, res) => {
       frequencyPerDay: filter.frequencyPerDay,
     });
 
+    // Schedule the reminder job immediately after upsert
+    await scheduleReminderJob(finalDoc);
     res.json({ ok: true, data: finalDoc });
   } catch (e) {
     console.error('[Reminders] create/upsert error:', e);
@@ -160,42 +169,59 @@ router.delete('/:id', async (req, res) => {
  *     - freq=1: same time next day
  *     - freq>1: + (24h / freq) minutes — preserves time-of-day pattern
  */
-export function startReminderScheduler() {
-  cron.schedule('* * * * *', async () => {
-    try {
-      const now = new Date();
-      const due = await Reminder.find({
-        nextAtISO: { $lte: now.toISOString() },
-      }).limit(50);
+// In-memory job map
+const reminderJobs = new Map();
 
-      for (const r of due) {
-        console.log(
-          `[REMINDER] ${r.drug} ${r.doseMg} mg — notify ${
-            r.contact?.email || 'user'
-          } (due at ${r.nextAtISO})`
-        );
-
-        const freq = Math.max(1, Math.min(24, Number(r.frequencyPerDay) || 1));
-        const current = new Date(r.nextAtISO);
-
-        if (freq === 1) {
-          // same clock time, next day
-          const next = new Date(current);
-          next.setDate(next.getDate() + 1);
-          r.nextAtISO = next.toISOString();
-        } else {
-          // keep interval consistent across the day
-          const intervalMin = Math.round((24 * 60) / freq);
-          const next = new Date(current.getTime() + intervalMin * 60 * 1000);
-          r.nextAtISO = next.toISOString();
-        }
-
-        await r.save();
+async function scheduleReminderJob(reminder) {
+  const reminderId = reminder._id.toString();
+  // Cancel any existing job for this reminder
+  if (reminderJobs.has(reminderId)) {
+    const oldJob = reminderJobs.get(reminderId);
+    oldJob.cancel();
+  }
+  const nextAt = new Date(reminder.nextAtISO);
+  if (nextAt > new Date()) {
+    const job = schedule.scheduleJob(nextAt, async function () {
+      const firedAt = new Date().toISOString();
+      console.log(
+        `[REMINDER FIRED] ${reminder.drug} ${reminder.doseMg} mg — notify ${
+          reminder.contact?.email || 'user'
+        } (scheduled for ${reminder.nextAtISO}, fired at ${firedAt})`
+      );
+      // Broadcast to all connected WebSocket clients
+      broadcastReminder(reminder);
+      // Reschedule next occurrence
+      const freq = Math.max(
+        1,
+        Math.min(24, Number(reminder.frequencyPerDay) || 1)
+      );
+      const current = new Date(reminder.nextAtISO);
+      let next;
+      if (freq === 1) {
+        next = new Date(current);
+        next.setDate(next.getDate() + 1);
+      } else {
+        const intervalMin = Math.round((24 * 60) / freq);
+        next = new Date(current.getTime() + intervalMin * 60 * 1000);
       }
-    } catch (e) {
-      console.error('[Scheduler] error:', e.message);
-    }
-  });
+      reminder.nextAtISO = next.toISOString();
+      await reminder.save();
+      // Schedule next job
+      scheduleReminderJob(reminder);
+    });
+    reminderJobs.set(reminderId, job);
+  }
+}
+
+export async function startReminderScheduler() {
+  // On startup, schedule jobs for all reminders
+  const reminders = await Reminder.find();
+  for (const r of reminders) {
+    scheduleReminderJob(r);
+  }
+  // Watch for new/updated reminders
+  // You may want to hook this into your create/update/delete logic for real-time scheduling
+  // ...existing code...
 }
 
 export default router;

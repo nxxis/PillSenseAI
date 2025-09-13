@@ -78,6 +78,35 @@ function toastKey(rem) {
 }
 
 export default function Meds() {
+  // WebSocket for real-time reminders
+  useEffect(() => {
+    const ws = new window.WebSocket('ws://localhost:5051');
+    ws.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'reminder' && msg.reminder) {
+          const r = msg.reminder;
+          const t = new Date(r.nextAtISO);
+          const hhmm = isNaN(t)
+            ? ''
+            : ` at ${t.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}`;
+          pushToast(`⏰ Time to take ${r.drug} (${r.doseMg} mg)${hhmm}`);
+        }
+      } catch {}
+    };
+    ws.onopen = () => {
+      console.log('[WS] Connected for reminders');
+    };
+    ws.onclose = () => {
+      console.log('[WS] Disconnected from reminders');
+    };
+    return () => {
+      ws.close();
+    };
+  }, []);
   // Modal state for confirmation dialogs
   const [modal, setModal] = useState({ open: false, type: '', med: null });
   // AI safety info bar state
@@ -268,48 +297,6 @@ export default function Meds() {
     );
   }
 
-  // Poll due reminders every 30s (STRICT MODE SAFE + DEDUPED)
-  useEffect(() => {
-    if (pollInitRef.current) return; // prevent double init in StrictMode
-    pollInitRef.current = true;
-
-    let timer = null;
-    const poll = async () => {
-      try {
-        const r = await jsonFetch(`${API_URL}/reminders/due?window=1`, {
-          headers: authHeader,
-        });
-        if (r.ok && r.data?.ok) {
-          const due = r.data.data || [];
-          for (const d of due) {
-            const key = toastKey(d);
-            if (shownRef.current.has(key)) continue; // already shown in this session
-            shownRef.current.add(key);
-            saveShownSet(shownRef.current);
-
-            const t = new Date(d.nextAtISO);
-            const hhmm = isNaN(t)
-              ? ''
-              : ` at ${t.toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}`;
-            pushToast(`⏰ Time to take ${d.drug} (${d.doseMg} mg)${hhmm}`);
-          }
-        }
-      } catch {
-        // ignore polling errors
-      } finally {
-        timer = setTimeout(poll, 30000);
-      }
-    };
-    poll();
-
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [authHeader]);
-
   const enableReminder = async (m) => {
     const medId = m._id;
     const preferred = (timeById[medId] || '08:00').trim();
@@ -346,7 +333,7 @@ export default function Meds() {
         localStorage.getItem(keyForMed(m)) ||
         isoToLocalHhmm(newRem?.nextAtISO || nextAtISO);
       setTimeById((prev) => ({ ...prev, [medId]: uiTime }));
-      pushToast(`✅ Reminders enabled for ${m.drug} (${m.doseMg} mg)`);
+      // pushToast(`✅ Reminders enabled for ${m.drug} (${m.doseMg} mg)`); // Only show reminders from WebSocket event
     } catch (e) {
       console.error(e);
       alert('Network error while enabling reminder.');
