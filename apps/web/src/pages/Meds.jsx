@@ -76,8 +76,10 @@ function toastKey(rem) {
 }
 
 export default function Meds() {
-  // Interaction/overdose info bar state
-  const [aiMessages, setAiMessages] = useState([]);
+  // AI safety info bar state
+  const [aiSafetyInfo, setAiSafetyInfo] = useState('');
+  const [aiSafetyLoading, setAiSafetyLoading] = useState(false);
+  const [aiSafetyError, setAiSafetyError] = useState('');
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -214,31 +216,42 @@ export default function Meds() {
     load();
   }, [load]);
 
-  // Fetch interaction/overdose info for active meds
+  // Fetch Gemini AI safety info for active meds
   useEffect(() => {
-    const activeMeds = items.filter((m) => !m.endsAt).map((m) => ({
-      drug: m.drug,
-      doseMg: m.doseMg,
-      frequencyPerDay: m.frequencyPerDay,
-    }));
+    const activeMeds = items
+      .filter((m) => !m.endsAt)
+      .map((m) => ({ drug: m.drug }));
     if (activeMeds.length === 0) {
-      setAiMessages([]);
+      setAiSafetyInfo('');
+      setAiSafetyError('');
+      setAiSafetyLoading(false);
       return;
     }
-    fetch(`${API_URL}/interactions/check`, {
+    setAiSafetyLoading(true);
+    setAiSafetyError('');
+    fetch(`${API_URL}/interactions/ai-check`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeader },
       body: JSON.stringify({ meds: activeMeds }),
     })
       .then((res) => res.json())
       .then((data) => {
-        if (data.ok && Array.isArray(data.messages)) {
-          setAiMessages(data.messages);
+        if (data.ok && data.explanation) {
+          setAiSafetyInfo(data.explanation);
+        } else if (data.error === 'quota_exceeded') {
+          setAiSafetyError(
+            'AI safety info temporarily unavailable (quota exceeded).'
+          );
+        } else if (data.error === 'model_overloaded') {
+          setAiSafetyError(
+            'AI safety info temporarily unavailable (model overloaded).'
+          );
         } else {
-          setAiMessages([]);
+          setAiSafetyError('Could not fetch AI safety info.');
         }
       })
-      .catch(() => setAiMessages([]));
+      .catch(() => setAiSafetyError('Could not fetch AI safety info.'))
+      .finally(() => setAiSafetyLoading(false));
   }, [items, authHeader]);
 
   // toast util
@@ -488,7 +501,10 @@ export default function Meds() {
                         </div>
                       )}
                       {messages.length > 0 && (
-                        <div className="ai-messages" style={{ margin: '8px 0' }}>
+                        <div
+                          className="ai-messages"
+                          style={{ margin: '8px 0' }}
+                        >
                           {messages.map((msg, idx) => (
                             <div
                               key={idx}
@@ -501,7 +517,9 @@ export default function Meds() {
                                     ? '#ffeaea'
                                     : '#e6f7ff',
                                 color:
-                                  msg.severity === 'warning' ? '#b00' : '#0055a5',
+                                  msg.severity === 'warning'
+                                    ? '#b00'
+                                    : '#0055a5',
                                 fontWeight: 'bold',
                                 fontSize: '1.05em',
                                 border:
@@ -528,7 +546,11 @@ export default function Meds() {
                     </div>
                     {!m.endsAt ? (
                       <div
-                        style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
+                        }}
                       >
                         <label className="muted" style={{ fontSize: 12 }}>
                           Reminder time
@@ -591,7 +613,9 @@ export default function Meds() {
                                 );
                               }
                             } catch (e) {
-                              alert('Network error while disabling medication.');
+                              alert(
+                                'Network error while disabling medication.'
+                              );
                             } finally {
                               setBusyId(null);
                             }
@@ -609,8 +633,8 @@ export default function Meds() {
                         This medication is ended.
                         <br />
                         <span style={{ color: '#f59e42' }}>
-                          You can reactivate this medication if you need to resume
-                          it.
+                          You can reactivate this medication if you need to
+                          resume it.
                         </span>
                         <br />
                         <button
@@ -639,7 +663,8 @@ export default function Meds() {
                                 load();
                               } else {
                                 alert(
-                                  data.error || 'Failed to reactivate medication.'
+                                  data.error ||
+                                    'Failed to reactivate medication.'
                                 );
                               }
                             } catch (e) {
@@ -663,46 +688,60 @@ export default function Meds() {
           </div>
         )}
       </div>
-      {/* AI Info Bar */}
+      {/* AI Safety Info Bar (Gemini) */}
       <aside style={{ minWidth: 320, maxWidth: 400 }}>
         <h3 style={{ marginBottom: 8 }}>AI Safety Info</h3>
-        {aiMessages.length === 0 ? (
+        {aiSafetyLoading ? (
           <div className="muted" style={{ fontSize: 15, marginBottom: 12 }}>
-            No interactions or overdose risks detected for your current active medications.
+            Loading AI safety info…
+          </div>
+        ) : aiSafetyError ? (
+          <div
+            className="muted"
+            style={{ fontSize: 15, marginBottom: 12, color: '#b00' }}
+          >
+            {aiSafetyError}
+          </div>
+        ) : aiSafetyInfo ? (
+          <div className="ai-messages" style={{ marginBottom: 12 }}>
+            {(() => {
+              // Simple risk detection: if AI message contains 'risk', 'danger', 'caution', 'warning', or 'interaction', color red; else green
+              const riskWords =
+                /risk|danger|caution|warning|interaction|unsafe|avoid|not recommended/i;
+              const isRisk = riskWords.test(aiSafetyInfo);
+              const style = {
+                background: isRisk
+                  ? 'rgba(176,0,32,0.12)'
+                  : 'rgba(39,174,96,0.10)',
+                color: isRisk ? '#ffb4b4' : '#b6f7c6',
+                fontWeight: 500,
+                fontSize: '1em',
+                borderRadius: '10px',
+                padding: '14px 18px',
+                marginBottom: 8,
+                boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+                border: 'none',
+                backdropFilter: 'blur(2px)',
+                transition: 'background 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                minHeight: '48px',
+                letterSpacing: '0.01em',
+              };
+              return (
+                <div className="ai-msg ai-msg-info" style={style}>
+                  <span
+                    style={{ flex: 1, color: isRisk ? '#ff4d4f' : '#2ecc40' }}
+                  >
+                    {aiSafetyInfo}
+                  </span>
+                </div>
+              );
+            })()}
           </div>
         ) : (
-          <div className="ai-messages" style={{ marginBottom: 12 }}>
-            {aiMessages.map((msg, idx) => (
-              <div
-                key={idx}
-                className={`ai-msg ai-msg-${msg.severity || 'info'}`}
-                style={{
-                  background:
-                    msg.severity === 'warning' ? '#ffeaea' : '#e6f7ff',
-                  color: msg.severity === 'warning' ? '#b00' : '#0055a5',
-                  fontWeight: 'bold',
-                  fontSize: '1.05em',
-                  border:
-                    '1px solid ' +
-                    (msg.severity === 'warning' ? '#b00' : '#0055a5'),
-                  borderRadius: 6,
-                  padding: '8px 12px',
-                  marginBottom: 8,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                }}
-              >
-                <span style={{ marginRight: 6 }}>
-                  <strong>
-                    {msg.type === 'interaction'
-                      ? 'Interaction:'
-                      : msg.type === 'overdose'
-                      ? 'Overdose:'
-                      : 'Info:'}
-                  </strong>
-                </span>
-                {msg.message}
-              </div>
-            ))}
+          <div className="muted" style={{ fontSize: 15, marginBottom: 12 }}>
+            No AI safety info available for your current active medications.
           </div>
         )}
       </aside>
