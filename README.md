@@ -1,4 +1,4 @@
-# PillSenseAI — Hackathon MVP
+# PillSenseAI — HopHacks2025
 
 A medication safety assistant. Snap a prescription label → AI extracts medications and dose/frequency → checks for basic risks → lets you enable dose reminders. Built as a **monorepo** with a React (Vite) web app and an Express/MongoDB API. Optional Gemini fallback improves handwriting and multi‑med parsing.
 
