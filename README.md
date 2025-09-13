@@ -233,11 +233,3 @@ At the root:
 If missing, run API via `node apps/api/src/index.js` and web via `vite`/`npm run dev` inside `apps/web`.
 
 ---
-
-## Notes
-
-- This is a **hackathon MVP**: the reminders use a demo scheduler and in‑app toasts, not real push notifications.
-- Replace the rules engine with a verified clinical source for production use.
-- Keep **PHI** safe: don’t store images or raw OCR text unless consented; sanitize logs.
-
-Happy hacking! 🚀
