@@ -1,0 +1,44 @@
+# Node modules
+node_modules/
+apps/*/node_modules/
+packages/*/node_modules/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment files
+.env
+.env.local
+apps/*/.env
+
+# Build outputs
+dist/
+apps/*/dist/
+apps/client/build/
+apps/client/.vite/
+apps/client/.next/
+
+# IDE / Editor
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Coverage reports
+coverage/
+
+# Temporary files
+*.tmp
+*.temp
+
+# OS generated files
+ehthumbs.db
+Desktop.ini
+
+# pnpm lock
+pnpm-lock.yaml

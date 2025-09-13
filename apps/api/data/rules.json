@@ -1,0 +1,30 @@
+{
+  "interactions": [
+    {
+      "a": "warfarin",
+      "b": "ibuprofen",
+      "severity": "high",
+      "message": "Ibuprofen with Warfarin may increase bleeding risk."
+    },
+    {
+      "a": "warfarin",
+      "b": "aspirin",
+      "severity": "high",
+      "message": "Aspirin with Warfarin can raise bleeding risk."
+    }
+  ],
+  "overdose": [
+    {
+      "drug": "acetaminophen",
+      "maxDailyMg": 4000,
+      "message": "Do not exceed 4,000 mg/day of acetaminophen."
+    }
+  ],
+  "food": [
+    {
+      "drug": "simvastatin",
+      "trigger": "grapefruit",
+      "message": "Avoid grapefruit; it can increase simvastatin levels."
+    }
+  ]
+}

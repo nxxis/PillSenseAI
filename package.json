@@ -1,0 +1,18 @@
+{
+  "name": "pillsenseai",
+  "private": true,
+  "version": "0.0.1",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:web": "npm --workspace @pillsense/web run dev",
+    "build:web": "npm --workspace @pillsense/web run build",
+    "preview:web": "npm --workspace @pillsense/web run preview",
+    "dev:api": "npm --workspace @pillsense/api run dev",
+    "start:api": "npm --workspace @pillsense/api run start"
+  },
+  "dependencies": {
+    "joi": "^18.0.1"
+  }
+}
