@@ -15,7 +15,7 @@ export default function Home() {
       <div className="features">
         <div className="feature">
           <h3>OCR + Parse</h3>
-          <p>Extract drug, dose, and frequency from the label (coming next).</p>
+          <p>Extract drug, dose, and frequency from the label.</p>
         </div>
         <div className="feature">
           <h3>Interaction Check</h3>

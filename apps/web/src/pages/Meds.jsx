@@ -1,6 +1,8 @@
 // apps/web/src/pages/Meds.jsx
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { API_URL } from '../lib/api';
+import Spinner from '../components/Spinner.jsx';
+import AlertModal from '../components/AlertModal.jsx';
 
 function fmtDate(d) {
   if (!d) return '—';
@@ -76,6 +78,8 @@ function toastKey(rem) {
 }
 
 export default function Meds() {
+  // Modal state for confirmation dialogs
+  const [modal, setModal] = useState({ open: false, type: '', med: null });
   // AI safety info bar state
   const [aiSafetyInfo, setAiSafetyInfo] = useState('');
   const [aiSafetyLoading, setAiSafetyLoading] = useState(false);
@@ -427,9 +431,16 @@ export default function Meds() {
         )}
 
         {loading ? (
-          <p className="muted" style={{ marginTop: 12 }}>
-            Loading…
-          </p>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginTop: 24,
+            }}
+          >
+            <Spinner size={32} />
+          </div>
         ) : items.length === 0 ? (
           <p style={{ marginTop: 12 }}>No prescriptions yet.</p>
         ) : (
@@ -580,7 +591,9 @@ export default function Meds() {
                           <button
                             className="btn"
                             style={{ background: '#374151' }}
-                            onClick={() => disableReminder(m)}
+                            onClick={() =>
+                              setModal({ open: true, type: 'reminder', med: m })
+                            }
                             disabled={busy}
                           >
                             {busy ? 'Disabling…' : 'Disable'}
@@ -590,36 +603,9 @@ export default function Meds() {
                         <button
                           className="btn"
                           style={{ background: '#f59e42', color: '#222' }}
-                          onClick={async () => {
-                            setBusyId(id);
-                            try {
-                              const res = await fetch(
-                                `${API_URL}/prescriptions/${id}/end`,
-                                {
-                                  method: 'PATCH',
-                                  headers: headersJSON,
-                                  body: JSON.stringify({
-                                    reason: 'ended_by_user',
-                                  }),
-                                }
-                              );
-                              const data = await res.json();
-                              if (res.ok && data.ok) {
-                                pushToast(`Medication disabled: ${m.drug}`);
-                                load();
-                              } else {
-                                alert(
-                                  data.error || 'Failed to disable medication.'
-                                );
-                              }
-                            } catch (e) {
-                              alert(
-                                'Network error while disabling medication.'
-                              );
-                            } finally {
-                              setBusyId(null);
-                            }
-                          }}
+                          onClick={() =>
+                            setModal({ open: true, type: 'medication', med: m })
+                          }
                           disabled={busy}
                         >
                           {busy ? 'Disabling…' : 'Disable medication'}
@@ -689,6 +675,53 @@ export default function Meds() {
         )}
       </div>
       {/* AI Safety Info Bar (Gemini) */}
+      {/* AlertModal for confirmation */}
+      <AlertModal
+        open={modal.open}
+        title={
+          modal.type === 'reminder'
+            ? 'Disable Reminder?'
+            : 'Disable Medication?'
+        }
+        message={
+          modal.type === 'reminder'
+            ? `Are you sure you want to disable reminders for ${modal.med?.drug}?`
+            : `Are you sure you want to disable ${modal.med?.drug}? This will end the medication.`
+        }
+        confirmText="Confirm"
+        cancelText="Cancel"
+        onConfirm={async () => {
+          if (!modal.med) return;
+          setBusyId(modal.med._id);
+          setModal({ open: false, type: '', med: null });
+          if (modal.type === 'reminder') {
+            await disableReminder(modal.med);
+          } else if (modal.type === 'medication') {
+            try {
+              const res = await fetch(
+                `${API_URL}/prescriptions/${modal.med._id}/end`,
+                {
+                  method: 'PATCH',
+                  headers: headersJSON,
+                  body: JSON.stringify({ reason: 'ended_by_user' }),
+                }
+              );
+              const data = await res.json();
+              if (res.ok && data.ok) {
+                pushToast(`Medication disabled: ${modal.med.drug}`);
+                load();
+              } else {
+                alert(data.error || 'Failed to disable medication.');
+              }
+            } catch (e) {
+              alert('Network error while disabling medication.');
+            } finally {
+              setBusyId(null);
+            }
+          }
+        }}
+        onCancel={() => setModal({ open: false, type: '', med: null })}
+      />
       <aside style={{ minWidth: 320, maxWidth: 400 }}>
         <h3 style={{ marginBottom: 8 }}>AI Safety Info</h3>
         {aiSafetyLoading ? (

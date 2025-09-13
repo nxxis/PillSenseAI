@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Spinner from '../components/Spinner.jsx';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -58,7 +59,7 @@ export default function Login() {
           </p>
         )}
         <button className="btn" type="submit" disabled={loading}>
-          {loading ? 'Signing in…' : 'Sign in'}
+          {loading ? <Spinner size={20} /> : 'Sign in'}
         </button>
       </form>
       <p className="muted" style={{ marginTop: 12 }}>

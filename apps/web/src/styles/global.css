@@ -7,6 +7,10 @@
   --border: #243042;
   --btn: #2563eb;
   --btn-text: #fff;
+  --modal-bg: rgba(18, 24, 35, 0.97);
+  --modal-card: #232b3a;
+  --modal-border: #3b4660;
+  --modal-shadow: 0 12px 48px rgba(0, 0, 0, 0.32);
 }
 
 * {
@@ -118,6 +122,67 @@ p {
   cursor: pointer;
   font-weight: 600;
 }
+
+/* AlertModal styles */
+.alert-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: var(--modal-bg);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.alert-modal-card {
+  background: var(--modal-card);
+  color: var(--text);
+  border-radius: 16px;
+  box-shadow: var(--modal-shadow);
+  border: 1.5px solid var(--modal-border);
+  padding: 36px 32px 26px 32px;
+  min-width: 340px;
+  max-width: 92vw;
+  text-align: center;
+  transition: box-shadow 0.2s, background 0.2s;
+}
+.alert-modal-message {
+  margin: 18px 0 24px 0;
+  color: var(--muted);
+  font-size: 1.08em;
+}
+.alert-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+.btn.btn-muted {
+  background: var(--border);
+  color: var(--muted);
+}
+
+/* Spinner styles */
+.spinner {
+  display: inline-block;
+  vertical-align: middle;
+  animation: spinner-fadein 0.2s;
+}
+@keyframes spinner-rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+@keyframes spinner-fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .btn[disabled] {
   opacity: 0.5;
   cursor: not-allowed;
