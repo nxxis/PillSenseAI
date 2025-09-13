@@ -76,6 +76,9 @@ function toastKey(rem) {
 }
 
 export default function Meds() {
+  // Interaction/overdose info bar state
+  const [aiMessages, setAiMessages] = useState([]);
+
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadErr, setLoadErr] = useState('');
@@ -210,6 +213,33 @@ export default function Meds() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Fetch interaction/overdose info for active meds
+  useEffect(() => {
+    const activeMeds = items.filter((m) => !m.endsAt).map((m) => ({
+      drug: m.drug,
+      doseMg: m.doseMg,
+      frequencyPerDay: m.frequencyPerDay,
+    }));
+    if (activeMeds.length === 0) {
+      setAiMessages([]);
+      return;
+    }
+    fetch(`${API_URL}/interactions/check`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeader },
+      body: JSON.stringify({ meds: activeMeds }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.ok && Array.isArray(data.messages)) {
+          setAiMessages(data.messages);
+        } else {
+          setAiMessages([]);
+        }
+      })
+      .catch(() => setAiMessages([]));
+  }, [items, authHeader]);
 
   // toast util
   function pushToast(text) {
@@ -346,291 +376,336 @@ export default function Meds() {
   };
 
   return (
-    <section className="card">
-      <h2>My Meds</h2>
-      <p className="muted" style={{ marginTop: 4 }}>
-        Active prescriptions saved from your scans. Turn on reminders per
-        medicine.
-      </p>
-
-      {toasts.length > 0 && (
-        <div
-          style={{
-            position: 'sticky',
-            top: 8,
-            zIndex: 10,
-            display: 'grid',
-            gap: 8,
-            marginBottom: 8,
-          }}
-        >
-          {toasts.map((t) => (
-            <div
-              key={t.id}
-              className="pill"
-              style={{ background: '#0f172a', border: '1px solid #334155' }}
-            >
-              {t.text}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {loadErr && (
-        <p className="muted" style={{ marginTop: 8, color: '#f87171' }}>
-          {loadErr}
+    <section className="card" style={{ display: 'flex', gap: 24 }}>
+      <div style={{ flex: 1 }}>
+        <h2>My Meds</h2>
+        <p className="muted" style={{ marginTop: 4 }}>
+          Active prescriptions saved from your scans. Turn on reminders per
+          medicine.
         </p>
-      )}
 
-      {loading ? (
-        <p className="muted" style={{ marginTop: 12 }}>
-          Loading…
-        </p>
-      ) : items.length === 0 ? (
-        <p style={{ marginTop: 12 }}>No prescriptions yet.</p>
-      ) : (
-        <div style={{ display: 'grid', gap: 12, marginTop: 12 }}>
-          {items.map((m) => {
-            const id = m._id;
-            const on = !!remOn[id];
-            const busy = busyId === id;
-            const messages = Array.isArray(m.messages) ? m.messages : [];
-            // User-friendly status messages for end/reactivate actions
-            let statusMsg = '';
-            if (m.flags) {
-              if (m.flags.endReason) {
-                statusMsg = 'This medication was ended.';
-                if (m.flags.endReason !== 'ended_by_user') {
-                  statusMsg += ` Reason: ${m.flags.endReason}`;
-                }
-              }
-              if (m.flags.reactivateReason) {
-                statusMsg = 'This medication was reactivated.';
-                if (m.flags.reactivateReason !== 'reactivated_by_user') {
-                  statusMsg += ` Reason: ${m.flags.reactivateReason}`;
-                }
-              }
-            }
-
-            return (
+        {toasts.length > 0 && (
+          <div
+            style={{
+              position: 'sticky',
+              top: 8,
+              zIndex: 10,
+              display: 'grid',
+              gap: 8,
+              marginBottom: 8,
+            }}
+          >
+            {toasts.map((t) => (
               <div
-                key={id}
+                key={t.id}
                 className="pill"
-                style={{
-                  display: 'grid',
-                  gap: 10,
-                  opacity: m.endsAt ? 0.6 : 1,
-                }}
+                style={{ background: '#0f172a', border: '1px solid #334155' }}
               >
+                {t.text}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {loadErr && (
+          <p className="muted" style={{ marginTop: 8, color: '#f87171' }}>
+            {loadErr}
+          </p>
+        )}
+
+        {loading ? (
+          <p className="muted" style={{ marginTop: 12 }}>
+            Loading…
+          </p>
+        ) : items.length === 0 ? (
+          <p style={{ marginTop: 12 }}>No prescriptions yet.</p>
+        ) : (
+          <div style={{ display: 'grid', gap: 12, marginTop: 12 }}>
+            {items.map((m) => {
+              const id = m._id;
+              const on = !!remOn[id];
+              const busy = busyId === id;
+              const messages = Array.isArray(m.messages) ? m.messages : [];
+              // User-friendly status messages for end/reactivate actions
+              let statusMsg = '';
+              if (m.flags) {
+                if (m.flags.endReason) {
+                  statusMsg = 'This medication was ended.';
+                  if (m.flags.endReason !== 'ended_by_user') {
+                    statusMsg += ` Reason: ${m.flags.endReason}`;
+                  }
+                }
+                if (m.flags.reactivateReason) {
+                  statusMsg = 'This medication was reactivated.';
+                  if (m.flags.reactivateReason !== 'reactivated_by_user') {
+                    statusMsg += ` Reason: ${m.flags.reactivateReason}`;
+                  }
+                }
+              }
+
+              return (
                 <div
+                  key={id}
+                  className="pill"
                   style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    gap: 8,
-                    flexWrap: 'wrap',
+                    display: 'grid',
+                    gap: 10,
+                    opacity: m.endsAt ? 0.6 : 1,
                   }}
                 >
-                  <div>
-                    <strong>{m.drug}</strong> — {m.doseMg} mg,{' '}
-                    {m.frequencyPerDay}×/day
-                    <div className="muted" style={{ fontSize: 12 }}>
-                      Started: {fmtDate(m.startedAt)} &nbsp;•&nbsp; Status:{' '}
-                      {m.endsAt ? 'Ended' : 'Active'}
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      gap: 8,
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <div>
+                      <strong>{m.drug}</strong> — {m.doseMg} mg,{' '}
+                      {m.frequencyPerDay}×/day
+                      <div className="muted" style={{ fontSize: 12 }}>
+                        Started: {fmtDate(m.startedAt)} &nbsp;•&nbsp; Status:{' '}
+                        {m.endsAt ? 'Ended' : 'Active'}
+                      </div>
+                      {notesById[id] && (
+                        <div
+                          className="muted"
+                          style={{ fontSize: 12, margin: '6px 0' }}
+                        >
+                          <span style={{ color: '#2563eb' }}>Note:</span>{' '}
+                          {notesById[id] || 'No description available.'}
+                        </div>
+                      )}
+                      {m.timing && (
+                        <div className="muted" style={{ fontSize: 12 }}>
+                          Timing: {m.timing}
+                        </div>
+                      )}
+                      {statusMsg && (
+                        <div className="muted" style={{ fontSize: 12 }}>
+                          {statusMsg}
+                        </div>
+                      )}
+                      {messages.length > 0 && (
+                        <div className="ai-messages" style={{ margin: '8px 0' }}>
+                          {messages.map((msg, idx) => (
+                            <div
+                              key={idx}
+                              className={`ai-msg ai-msg-${
+                                msg.severity || 'info'
+                              }`}
+                              style={{
+                                background:
+                                  msg.severity === 'warning'
+                                    ? '#ffeaea'
+                                    : '#e6f7ff',
+                                color:
+                                  msg.severity === 'warning' ? '#b00' : '#0055a5',
+                                fontWeight: 'bold',
+                                fontSize: '1.05em',
+                                border:
+                                  '1px solid ' +
+                                  (msg.severity === 'warning'
+                                    ? '#b00'
+                                    : '#0055a5'),
+                                borderRadius: 6,
+                                padding: '6px 10px',
+                                marginBottom: 6,
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                              }}
+                            >
+                              <span style={{ marginRight: 6 }}>
+                                <strong>
+                                  {msg.type === 'timing' ? 'Info:' : 'Note:'}
+                                </strong>
+                              </span>
+                              {msg.message}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    {notesById[id] && (
+                    {!m.endsAt ? (
+                      <div
+                        style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                      >
+                        <label className="muted" style={{ fontSize: 12 }}>
+                          Reminder time
+                        </label>
+                        <input
+                          type="time"
+                          className="input"
+                          style={{ width: 140, padding: '6px 10px' }}
+                          value={timeById[id] || '08:00'}
+                          onChange={(e) =>
+                            setTimeById((prev) => ({
+                              ...prev,
+                              [id]: e.target.value,
+                            }))
+                          }
+                          disabled={on || busy}
+                        />
+                        {!on ? (
+                          <button
+                            className="btn"
+                            onClick={() => enableReminder(m)}
+                            disabled={busy}
+                          >
+                            {busy ? 'Enabling…' : 'Enable reminders'}
+                          </button>
+                        ) : (
+                          <button
+                            className="btn"
+                            style={{ background: '#374151' }}
+                            onClick={() => disableReminder(m)}
+                            disabled={busy}
+                          >
+                            {busy ? 'Disabling…' : 'Disable'}
+                          </button>
+                        )}
+                        {/* Disable medication button */}
+                        <button
+                          className="btn"
+                          style={{ background: '#f59e42', color: '#222' }}
+                          onClick={async () => {
+                            setBusyId(id);
+                            try {
+                              const res = await fetch(
+                                `${API_URL}/prescriptions/${id}/end`,
+                                {
+                                  method: 'PATCH',
+                                  headers: headersJSON,
+                                  body: JSON.stringify({
+                                    reason: 'ended_by_user',
+                                  }),
+                                }
+                              );
+                              const data = await res.json();
+                              if (res.ok && data.ok) {
+                                pushToast(`Medication disabled: ${m.drug}`);
+                                load();
+                              } else {
+                                alert(
+                                  data.error || 'Failed to disable medication.'
+                                );
+                              }
+                            } catch (e) {
+                              alert('Network error while disabling medication.');
+                            } finally {
+                              setBusyId(null);
+                            }
+                          }}
+                          disabled={busy}
+                        >
+                          {busy ? 'Disabling…' : 'Disable medication'}
+                        </button>
+                      </div>
+                    ) : (
                       <div
                         className="muted"
-                        style={{ fontSize: 12, margin: '6px 0' }}
+                        style={{ fontSize: 12, marginTop: 8 }}
                       >
-                        <span style={{ color: '#2563eb' }}>Note:</span>{' '}
-                        {notesById[id] || 'No description available.'}
-                      </div>
-                    )}
-                    {m.timing && (
-                      <div className="muted" style={{ fontSize: 12 }}>
-                        Timing: {m.timing}
-                      </div>
-                    )}
-                    {statusMsg && (
-                      <div className="muted" style={{ fontSize: 12 }}>
-                        {statusMsg}
-                      </div>
-                    )}
-                    {messages.length > 0 && (
-                      <div className="ai-messages" style={{ margin: '8px 0' }}>
-                        {messages.map((msg, idx) => (
-                          <div
-                            key={idx}
-                            className={`ai-msg ai-msg-${
-                              msg.severity || 'info'
-                            }`}
-                            style={{
-                              background:
-                                msg.severity === 'warning'
-                                  ? '#ffeaea'
-                                  : '#e6f7ff',
-                              color:
-                                msg.severity === 'warning' ? '#b00' : '#0055a5',
-                              fontWeight: 'bold',
-                              fontSize: '1.05em',
-                              border:
-                                '1px solid ' +
-                                (msg.severity === 'warning'
-                                  ? '#b00'
-                                  : '#0055a5'),
-                              borderRadius: 6,
-                              padding: '6px 10px',
-                              marginBottom: 6,
-                              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                            }}
-                          >
-                            <span style={{ marginRight: 6 }}>
-                              <strong>
-                                {msg.type === 'timing' ? 'Info:' : 'Note:'}
-                              </strong>
-                            </span>
-                            {msg.message}
-                          </div>
-                        ))}
+                        This medication is ended.
+                        <br />
+                        <span style={{ color: '#f59e42' }}>
+                          You can reactivate this medication if you need to resume
+                          it.
+                        </span>
+                        <br />
+                        <button
+                          className="btn"
+                          style={{
+                            background: '#38bdf8',
+                            color: '#222',
+                            marginTop: 8,
+                          }}
+                          onClick={async () => {
+                            setBusyId(id);
+                            try {
+                              const res = await fetch(
+                                `${API_URL}/prescriptions/${id}/reactivate`,
+                                {
+                                  method: 'PATCH',
+                                  headers: headersJSON,
+                                  body: JSON.stringify({
+                                    reason: 'reactivated_by_user',
+                                  }),
+                                }
+                              );
+                              const data = await res.json();
+                              if (res.ok && data.ok) {
+                                pushToast(`Medication reactivated: ${m.drug}`);
+                                load();
+                              } else {
+                                alert(
+                                  data.error || 'Failed to reactivate medication.'
+                                );
+                              }
+                            } catch (e) {
+                              alert(
+                                'Network error while reactivating medication.'
+                              );
+                            } finally {
+                              setBusyId(null);
+                            }
+                          }}
+                          disabled={busy}
+                        >
+                          {busy ? 'Reactivating…' : 'Reactivate medication'}
+                        </button>
                       </div>
                     )}
                   </div>
-                  {!m.endsAt ? (
-                    <div
-                      style={{ display: 'flex', alignItems: 'center', gap: 8 }}
-                    >
-                      <label className="muted" style={{ fontSize: 12 }}>
-                        Reminder time
-                      </label>
-                      <input
-                        type="time"
-                        className="input"
-                        style={{ width: 140, padding: '6px 10px' }}
-                        value={timeById[id] || '08:00'}
-                        onChange={(e) =>
-                          setTimeById((prev) => ({
-                            ...prev,
-                            [id]: e.target.value,
-                          }))
-                        }
-                        disabled={on || busy}
-                      />
-                      {!on ? (
-                        <button
-                          className="btn"
-                          onClick={() => enableReminder(m)}
-                          disabled={busy}
-                        >
-                          {busy ? 'Enabling…' : 'Enable reminders'}
-                        </button>
-                      ) : (
-                        <button
-                          className="btn"
-                          style={{ background: '#374151' }}
-                          onClick={() => disableReminder(m)}
-                          disabled={busy}
-                        >
-                          {busy ? 'Disabling…' : 'Disable'}
-                        </button>
-                      )}
-                      {/* Disable medication button */}
-                      <button
-                        className="btn"
-                        style={{ background: '#f59e42', color: '#222' }}
-                        onClick={async () => {
-                          setBusyId(id);
-                          try {
-                            const res = await fetch(
-                              `${API_URL}/prescriptions/${id}/end`,
-                              {
-                                method: 'PATCH',
-                                headers: headersJSON,
-                                body: JSON.stringify({
-                                  reason: 'ended_by_user',
-                                }),
-                              }
-                            );
-                            const data = await res.json();
-                            if (res.ok && data.ok) {
-                              pushToast(`Medication disabled: ${m.drug}`);
-                              load();
-                            } else {
-                              alert(
-                                data.error || 'Failed to disable medication.'
-                              );
-                            }
-                          } catch (e) {
-                            alert('Network error while disabling medication.');
-                          } finally {
-                            setBusyId(null);
-                          }
-                        }}
-                        disabled={busy}
-                      >
-                        {busy ? 'Disabling…' : 'Disable medication'}
-                      </button>
-                    </div>
-                  ) : (
-                    <div
-                      className="muted"
-                      style={{ fontSize: 12, marginTop: 8 }}
-                    >
-                      This medication is ended.
-                      <br />
-                      <span style={{ color: '#f59e42' }}>
-                        You can reactivate this medication if you need to resume
-                        it.
-                      </span>
-                      <br />
-                      <button
-                        className="btn"
-                        style={{
-                          background: '#38bdf8',
-                          color: '#222',
-                          marginTop: 8,
-                        }}
-                        onClick={async () => {
-                          setBusyId(id);
-                          try {
-                            const res = await fetch(
-                              `${API_URL}/prescriptions/${id}/reactivate`,
-                              {
-                                method: 'PATCH',
-                                headers: headersJSON,
-                                body: JSON.stringify({
-                                  reason: 'reactivated_by_user',
-                                }),
-                              }
-                            );
-                            const data = await res.json();
-                            if (res.ok && data.ok) {
-                              pushToast(`Medication reactivated: ${m.drug}`);
-                              load();
-                            } else {
-                              alert(
-                                data.error || 'Failed to reactivate medication.'
-                              );
-                            }
-                          } catch (e) {
-                            alert(
-                              'Network error while reactivating medication.'
-                            );
-                          } finally {
-                            setBusyId(null);
-                          }
-                        }}
-                        disabled={busy}
-                      >
-                        {busy ? 'Reactivating…' : 'Reactivate medication'}
-                      </button>
-                    </div>
-                  )}
                 </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+      {/* AI Info Bar */}
+      <aside style={{ minWidth: 320, maxWidth: 400 }}>
+        <h3 style={{ marginBottom: 8 }}>AI Safety Info</h3>
+        {aiMessages.length === 0 ? (
+          <div className="muted" style={{ fontSize: 15, marginBottom: 12 }}>
+            No interactions or overdose risks detected for your current active medications.
+          </div>
+        ) : (
+          <div className="ai-messages" style={{ marginBottom: 12 }}>
+            {aiMessages.map((msg, idx) => (
+              <div
+                key={idx}
+                className={`ai-msg ai-msg-${msg.severity || 'info'}`}
+                style={{
+                  background:
+                    msg.severity === 'warning' ? '#ffeaea' : '#e6f7ff',
+                  color: msg.severity === 'warning' ? '#b00' : '#0055a5',
+                  fontWeight: 'bold',
+                  fontSize: '1.05em',
+                  border:
+                    '1px solid ' +
+                    (msg.severity === 'warning' ? '#b00' : '#0055a5'),
+                  borderRadius: 6,
+                  padding: '8px 12px',
+                  marginBottom: 8,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                }}
+              >
+                <span style={{ marginRight: 6 }}>
+                  <strong>
+                    {msg.type === 'interaction'
+                      ? 'Interaction:'
+                      : msg.type === 'overdose'
+                      ? 'Overdose:'
+                      : 'Info:'}
+                  </strong>
+                </span>
+                {msg.message}
               </div>
-            );
-          })}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </aside>
     </section>
   );
 }

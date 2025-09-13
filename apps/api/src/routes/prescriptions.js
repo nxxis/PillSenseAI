@@ -39,6 +39,11 @@ router.post('/note', async (req, res) => {
         console.error('[Prescriptions] Gemini quota error:', e);
         return res.status(429).json({ ok: false, error: 'quota_exceeded' });
       }
+      // Detect Gemini model overload error (503)
+      if (e && e.status === 503) {
+        console.error('[Prescriptions] Gemini model overloaded:', e);
+        return res.status(503).json({ ok: false, error: 'model_overloaded' });
+      }
       console.error('[Prescriptions] note error:', e);
       res.status(500).json({ ok: false, error: 'note_failed' });
     }
