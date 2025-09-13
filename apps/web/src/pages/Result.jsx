@@ -1,6 +1,7 @@
 // apps/web/src/pages/Result.jsx
 import { useLocation, Link } from 'react-router-dom';
 import { useMemo, useState } from 'react';
+import AlertModal from '../components/AlertModal.jsx';
 
 export default function Result() {
   const { state } = useLocation() || {};
@@ -20,9 +21,20 @@ export default function Result() {
 
   const [addingIdx, setAddingIdx] = useState(null);
   const [addMsg, setAddMsg] = useState('');
+  const [alertModal, setAlertModal] = useState({
+    open: false,
+    title: '',
+    message: '',
+    addedIdx: null,
+  });
+  const [addedMedIdxs, setAddedMedIdxs] = useState([]);
 
   const setReminderDemo = () => {
-    alert('(Demo) Reminders are controlled per medicine on the My Meds page.');
+    setAlertModal({
+      open: true,
+      title: 'Demo',
+      message: 'Reminders are controlled per medicine on the My Meds page.',
+    });
   };
 
   if (!parsedInput) {
@@ -102,7 +114,7 @@ export default function Result() {
                   <button
                     className="btn"
                     style={{ marginTop: 8, minWidth: 120 }}
-                    disabled={addingIdx === i}
+                    disabled={addingIdx === i || addedMedIdxs.includes(i)}
                     onClick={async () => {
                       setAddingIdx(i);
                       setAddMsg('');
@@ -129,38 +141,82 @@ export default function Result() {
                         const data = await res.json();
                         if (res.ok && data.ok) {
                           if (data.duplicate) {
-                            setAddMsg(`ℹ️ Already in your meds.`);
+                            setAlertModal({
+                              open: true,
+                              title: 'Already Added',
+                              message: `ℹ️ ${p.drug} is already in your meds.`,
+                              addedIdx: i,
+                            });
                           } else {
-                            setAddMsg(`✅ Added ${p.drug} to your meds.`);
+                            setAlertModal({
+                              open: true,
+                              title: 'Medication Added',
+                              message: `✅ Added ${p.drug} to your meds.`,
+                              addedIdx: i,
+                            });
                           }
                         } else {
-                          setAddMsg(data.error || 'Failed to add medication.');
+                          setAlertModal({
+                            open: true,
+                            title: 'Error',
+                            message: data.error || 'Failed to add medication.',
+                            addedIdx: null,
+                          });
                         }
                       } catch (e) {
-                        setAddMsg('Network error.');
+                        setAlertModal({
+                          open: true,
+                          title: 'Network Error',
+                          message:
+                            'Could not add medication due to a network error.',
+                          addedIdx: null,
+                        });
                       } finally {
                         setAddingIdx(null);
                       }
                     }}
                   >
-                    {addingIdx === i ? 'Adding…' : 'Add to My Meds'}
+                    {addingIdx === i
+                      ? 'Adding…'
+                      : addedMedIdxs.includes(i)
+                      ? 'Added'
+                      : 'Add to My Meds'}
                   </button>
                 </div>
               ))
             )}
 
             {/* Show backend info/warning messages */}
-            {addMsg && (
-              <div
-                style={{
-                  margin: '8px 0',
-                  color: '#059669',
-                  fontWeight: 'bold',
-                }}
-              >
-                {addMsg}
-              </div>
-            )}
+            {/* AlertModal for add to meds feedback */}
+            <AlertModal
+              open={alertModal.open}
+              title={alertModal.title}
+              message={alertModal.message}
+              confirmText="OK"
+              cancelText=""
+              onConfirm={() => {
+                setAlertModal({
+                  open: false,
+                  title: '',
+                  message: '',
+                  addedIdx: null,
+                });
+                if (
+                  alertModal.addedIdx !== null &&
+                  !addedMedIdxs.includes(alertModal.addedIdx)
+                ) {
+                  setAddedMedIdxs((prev) => [...prev, alertModal.addedIdx]);
+                }
+              }}
+              onCancel={() => {
+                setAlertModal({
+                  open: false,
+                  title: '',
+                  message: '',
+                  addedIdx: null,
+                });
+              }}
+            />
             {Array.isArray(messages) && messages.length > 0 && (
               <div className="ai-messages" style={{ marginBottom: 12 }}>
                 {messages.map((msg, idx) => (
@@ -205,9 +261,6 @@ export default function Result() {
               <Link to="/meds" className="btn">
                 Go to My Meds
               </Link>
-              <button className="btn" onClick={setReminderDemo}>
-                Set reminder
-              </button>
             </div>
           </div>
         </div>

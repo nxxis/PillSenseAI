@@ -49,7 +49,14 @@ export async function parsePrescriptionText(
   rawText,
   meta = { confidence: 0, wordsCount: 0 }
 ) {
-  const cleaned = (rawText || '').replace(/\s+/g, ' ').trim();
+  // Preserve line breaks for splitting
+  const cleaned = (rawText || '')
+    .replace(/\r\n/g, '\n') // normalize Windows line endings
+    .replace(/\r/g, '\n')
+    .replace(/[\t\f\v]+/g, ' ') // replace tabs/formfeeds/vertical tabs with space
+    .replace(/ +/g, ' ') // collapse multiple spaces
+    .replace(/ *\n */g, '\n') // trim spaces around line breaks
+    .trim();
   const { confidence = 0, wordsCount = 0 } = meta;
 
   // HARD STOPS: not enough OCR content
