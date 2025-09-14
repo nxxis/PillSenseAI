@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { API_URL } from '../lib/api';
+import '../styles/Register.css';
+import logo from '../assets/pill-logo.svg';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -62,98 +64,108 @@ export default function Register() {
   };
 
   return (
-    <section className="card" style={{ maxWidth: 520, margin: '0 auto' }}>
-      <h2>Create account</h2>
-      <form
-        onSubmit={onSubmit}
-        style={{ display: 'grid', gap: 12, marginTop: 12 }}
-      >
-        <label>
-          <div className="muted" style={{ marginBottom: 6 }}>
-            Name
-          </div>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="input"
-            placeholder="Your name"
+    <div className="login-bg fade-transition">
+      <div className="register-container">
+        <div className="register-info">
+          <img
+            src={logo}
+            alt="PillSenseAI Logo"
+            style={{ width: 64, height: 64, marginBottom: 16 }}
           />
-        </label>
-
-        <label>
-          <div className="muted" style={{ marginBottom: 6 }}>
-            Email
-          </div>
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="input"
-            placeholder="you@example.com"
-          />
-        </label>
-
-        <label>
-          <div className="muted" style={{ marginBottom: 6 }}>
-            Password
-          </div>
-          <input
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="input"
-            placeholder="Min 8 characters"
-          />
-        </label>
-
-        {/* Date of Birth */}
-        <label>
-          <div className="muted" style={{ marginBottom: 6 }}>
-            Date of Birth
-          </div>
-          <input
-            type="date"
-            required
-            value={dob}
-            onChange={(e) => setDob(e.target.value)}
-            className="input"
-          />
-        </label>
-
-        {/* Gender */}
-        <label>
-          <div className="muted" style={{ marginBottom: 6 }}>
-            Gender
-          </div>
-          <select
-            className="input"
-            value={gender}
-            onChange={(e) => setGender(e.target.value)}
-          >
-            <option value="unspecified">Prefer not to say</option>
-            <option value="female">Female</option>
-            <option value="male">Male</option>
-            <option value="other">Other</option>
-          </select>
-        </label>
-
-        {err && (
-          <p className="muted" style={{ color: '#f87171' }}>
-            {err}
+          <h1>PillSenseAI</h1>
+          <p>
+            Create your PillSenseAI account to get started with smart medication
+            reminders and health management.
           </p>
-        )}
-
-        <button className="btn" type="submit" disabled={loading}>
-          {loading ? 'Creating…' : 'Create account'}
-        </button>
-      </form>
-
-      <p className="muted" style={{ marginTop: 12 }}>
-        Already have an account? <Link to="/login">Sign in</Link>
-      </p>
-    </section>
+          <p className="muted">Your health, simplified.</p>
+        </div>
+        <div className="register-form-section">
+          <form className="register-form" onSubmit={onSubmit}>
+            <h2>Create account</h2>
+            <label>
+              <div className="muted" style={{ marginBottom: 6 }}>
+                Name
+              </div>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your name"
+              />
+            </label>
+            <label>
+              <div className="muted" style={{ marginBottom: 6 }}>
+                Email
+              </div>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+              />
+            </label>
+            <label>
+              <div className="muted" style={{ marginBottom: 6 }}>
+                Password
+              </div>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Min 8 characters"
+              />
+            </label>
+            <label>
+              <div className="muted" style={{ marginBottom: 6 }}>
+                Date of Birth
+              </div>
+              <input
+                type="date"
+                required
+                value={dob}
+                onChange={(e) => setDob(e.target.value)}
+              />
+            </label>
+            <label>
+              <div className="muted" style={{ marginBottom: 6 }}>
+                Gender
+              </div>
+              <select
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+              >
+                <option value="unspecified">Prefer not to say</option>
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+                <option value="other">Other</option>
+              </select>
+            </label>
+            {err && (
+              <p className="muted" style={{ color: '#f87171' }}>
+                {err}
+              </p>
+            )}
+            <button type="submit" disabled={loading}>
+              {loading ? 'Creating…' : 'Create account'}
+            </button>
+            <p className="muted" style={{ marginTop: 12, textAlign: 'center' }}>
+              Already have an account?{' '}
+              <span
+                style={{
+                  color: '#2bb7b3',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                }}
+                onClick={() => nav('/login')}
+              >
+                Sign in
+              </span>
+            </p>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 }
