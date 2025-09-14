@@ -1,11 +1,17 @@
 import { useEffect, useState } from 'react';
 import { getJson } from '../lib/api';
+import AlertModal from '../components/AlertModal.jsx';
 
 export default function Profile() {
   const [dob, setDob] = useState('');
   const [gender, setGender] = useState('unspecified');
   const [age, setAge] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [alertModal, setAlertModal] = useState({
+    open: false,
+    title: '',
+    message: '',
+  });
 
   useEffect(() => {
     getJson('/profile').then((r) => {
@@ -36,9 +42,17 @@ export default function Profile() {
     setSaving(false);
     if (data.ok) {
       setAge(data.profile?.ageYears ?? null);
-      alert('Profile saved.');
+      setAlertModal({
+        open: true,
+        title: 'Success',
+        message: 'Profile saved.',
+      });
     } else {
-      alert(data.error || 'Failed to save.');
+      setAlertModal({
+        open: true,
+        title: 'Error',
+        message: data.error || 'Failed to save.',
+      });
     }
   };
 
@@ -96,6 +110,15 @@ export default function Profile() {
           {saving ? 'Saving…' : 'Save'}
         </button>
       </form>
+      <AlertModal
+        open={alertModal.open}
+        title={alertModal.title}
+        message={alertModal.message}
+        confirmText="OK"
+        cancelText=""
+        onConfirm={() => setAlertModal({ ...alertModal, open: false })}
+        onCancel={() => setAlertModal({ ...alertModal, open: false })}
+      />
     </section>
   );
 }

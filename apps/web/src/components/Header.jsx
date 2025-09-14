@@ -1,6 +1,6 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 import AlertModal from './AlertModal.jsx';
 import '../styles/Header.css';
@@ -73,6 +73,18 @@ export default function Header() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [showLogout, setShowLogout] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    if (!showLogout) return;
+    function handleClickOutside(e) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowLogout(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showLogout]);
 
   const handleLogout = () => {
     logout();
@@ -97,17 +109,68 @@ export default function Header() {
           </NavLink>
         </nav>
         {user ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ color: '#9bb0c3', fontWeight: 600 }}>
+          <div
+            ref={dropdownRef}
+            style={{
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+            }}
+          >
+            <span
+              style={{
+                color: '#9bb0c3',
+                fontWeight: 600,
+                cursor: 'pointer',
+                padding: '6px 14px',
+                borderRadius: 8,
+                background: 'rgba(176, 0, 32, 0.04)',
+              }}
+              onClick={() => setShowLogout((v) => !v)}
+            >
               {user.name || user.email}
             </span>
-            <button
-              className="btn btn-muted"
-              onClick={handleLogout}
-              style={{ padding: '6px 14px', fontSize: 14 }}
-            >
-              Logout
-            </button>
+            {showLogout && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 4px)',
+                  right: 0,
+                  background: '#fff',
+                  color: '#222e3a',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: 8,
+                  boxShadow: '0 2px 12px rgba(43,179,179,0.10)',
+                  minWidth: 90,
+                  zIndex: 100,
+                  padding: '4px 0',
+                  textAlign: 'left',
+                }}
+              >
+                <button
+                  className="btn btn-muted"
+                  style={{
+                    width: '100%',
+                    background: 'none',
+                    color: '#222e3a',
+                    fontWeight: 500,
+                    fontSize: 15,
+                    border: 'none',
+                    borderRadius: 0,
+                    padding: '7px 12px',
+                    textAlign: 'center',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                  }}
+                  onClick={handleLogout}
+                >
+                  Logout
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <nav className="nav">
