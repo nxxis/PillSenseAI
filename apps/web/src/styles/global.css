@@ -159,6 +159,7 @@ p {
   max-width: 92vw;
   text-align: center;
   transition: box-shadow 0.2s, background 0.2s;
+  animation: modalFadeScale 0.35s cubic-bezier(0.4, 2, 0.3, 1);
 }
 .alert-modal-message {
   margin: 18px 0 24px 0;
@@ -320,4 +321,15 @@ p {
 }
 .input:focus {
   border-color: #33507a;
+}
+
+@keyframes modalFadeScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }

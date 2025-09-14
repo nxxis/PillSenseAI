@@ -19,11 +19,14 @@ export default function AlertModal({
         left: 0,
         right: 0,
         zIndex: 9999,
-        background: 'rgba(0,0,0,0.5)',
+        background: 'rgba(30,30,30,0.25)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         height: '100vh',
+        animation: 'modalFadeScale 0.4s cubic-bezier(.4,0,.2,1)',
       }}
     >
       <div
@@ -34,6 +37,7 @@ export default function AlertModal({
           boxShadow: '0 2px 16px #0002',
           minWidth: 320,
           textAlign: 'center',
+          animation: 'modalFadeScale 0.4s cubic-bezier(.4,0,.2,1)',
         }}
       >
         <h2 style={{ marginBottom: 16, color: '#222' }}>{title}</h2>

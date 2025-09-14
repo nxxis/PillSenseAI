@@ -20,6 +20,7 @@ export default function MedCard({
   load,
   busyId,
   setBusyId,
+  setEnableMedAlert,
 }) {
   return (
     <div
@@ -142,13 +143,27 @@ export default function MedCard({
             </div>
           </div>
         ) : (
-          <div className="muted" style={{ fontSize: 12, marginTop: 8 }}>
-            This medication is ended.
-            <br />
-            <span style={{ color: '#f59e42' }}>
+          <div
+            style={{
+              fontSize: 12,
+              marginTop: 8,
+              color: '#222e3a',
+              background: '#fff',
+              borderRadius: 12,
+              boxShadow: '0 2px 16px #0002',
+              padding: 24,
+              minWidth: 320,
+              textAlign: 'left',
+            }}
+          >
+            <div style={{ marginBottom: 8 }}>
+              <span style={{ fontWeight: 700 }}>This medication is ended.</span>
+            </div>
+            <span
+              style={{ color: '#f59e42', display: 'block', marginBottom: 8 }}
+            >
               You can reactivate this medication if you need to resume it.
             </span>
-            <br />
             <button
               className="btn"
               style={{ background: '#38bdf8', color: '#222', marginTop: 8 }}
@@ -165,8 +180,13 @@ export default function MedCard({
                   );
                   const data = await res.json();
                   if (res.ok && data.ok) {
-                    pushToast(`Medication reactivated: ${m.drug}`);
                     load();
+                    if (setEnableMedAlert) {
+                      setEnableMedAlert({
+                        open: true,
+                        text: 'Medication reactivated successfully.',
+                      });
+                    }
                   } else {
                     alert(data.error || 'Failed to reactivate medication.');
                   }

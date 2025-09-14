@@ -122,6 +122,12 @@ export default function Profile() {
         cancelText=""
         onConfirm={() => setAlertModal({ ...alertModal, open: false })}
         onCancel={() => setAlertModal({ ...alertModal, open: false })}
+        style={{
+          animation: 'modalFadeScale 0.4s cubic-bezier(.4,0,.2,1)',
+          background: 'rgba(30,30,30,0.25)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+        }}
       />
     </section>
   );

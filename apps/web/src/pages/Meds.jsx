@@ -84,6 +84,11 @@ export default function Meds() {
   const [enableAlert, setEnableAlert] = useState({ open: false, text: '' });
   // Success alert modal for disabling reminders
   const [disableAlert, setDisableAlert] = useState({ open: false, text: '' });
+  // Success alert modal for reactivating medication
+  const [enableMedAlert, setEnableMedAlert] = useState({
+    open: false,
+    text: '',
+  });
   // Modal state for confirmation dialogs
   const [modal, setModal] = useState({ open: false, type: '', med: null });
   // AI safety info bar state
@@ -402,11 +407,14 @@ export default function Meds() {
               left: 0,
               right: 0,
               zIndex: 9999,
-              background: 'rgba(0,0,0,0.5)',
+              background: 'rgba(30,30,30,0.25)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               height: '100vh',
+              animation: 'modalFadeScale 0.4s cubic-bezier(.4,0,.2,1)',
             }}
           >
             <div
@@ -441,11 +449,14 @@ export default function Meds() {
               left: 0,
               right: 0,
               zIndex: 9999,
-              background: 'rgba(0,0,0,0.5)',
+              background: 'rgba(30,30,30,0.25)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               height: '100vh',
+              animation: 'modalFadeScale 0.4s cubic-bezier(.4,0,.2,1)',
             }}
           >
             <div
@@ -521,27 +532,41 @@ export default function Meds() {
                 }
               }
               return (
-                <MedCard
-                  key={id}
-                  m={m}
-                  id={id}
-                  on={on}
-                  busy={busy}
-                  time={timeById[id]}
-                  notes={notesById[id]}
-                  statusMsg={statusMsg}
-                  messages={messages}
-                  enableReminder={enableReminder}
-                  disableReminder={disableReminder}
-                  setModal={setModal}
-                  setTimeById={setTimeById}
-                  headersJSON={headersJSON}
-                  API_URL={API_URL}
-                  pushToast={pushToast}
-                  load={load}
-                  busyId={busyId}
-                  setBusyId={setBusyId}
-                />
+                <>
+                  <MedCard
+                    key={id}
+                    m={m}
+                    id={id}
+                    on={on}
+                    busy={busy}
+                    time={timeById[id]}
+                    notes={notesById[id]}
+                    statusMsg={statusMsg}
+                    messages={messages}
+                    enableReminder={enableReminder}
+                    disableReminder={disableReminder}
+                    setModal={setModal}
+                    setTimeById={setTimeById}
+                    headersJSON={headersJSON}
+                    API_URL={API_URL}
+                    pushToast={pushToast}
+                    load={load}
+                    busyId={busyId}
+                    setBusyId={setBusyId}
+                    setEnableMedAlert={setEnableMedAlert}
+                  />
+                  <AlertModal
+                    open={enableMedAlert.open}
+                    title="Success"
+                    message={enableMedAlert.text}
+                    color="#222"
+                    onConfirm={() =>
+                      setEnableMedAlert({ open: false, text: '' })
+                    }
+                    confirmText="OK"
+                    cancelText={null}
+                  />
+                </>
               );
             })}
           </div>
@@ -581,7 +606,6 @@ export default function Meds() {
               );
               const data = await res.json();
               if (res.ok && data.ok) {
-                pushToast(`Medication disabled: ${modal.med.drug}`);
                 load();
               } else {
                 alert(data.error || 'Failed to disable medication.');
