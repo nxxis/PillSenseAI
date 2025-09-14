@@ -1,5 +1,6 @@
 // apps/web/src/pages/Meds.jsx
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import '../styles/Meds.css';
 import { API_URL } from '../lib/api';
 import Spinner from '../components/Spinner.jsx';
 import AlertModal from '../components/AlertModal.jsx';
@@ -407,8 +408,8 @@ export default function Meds() {
   };
 
   return (
-    <section className="card" style={{ display: 'flex', gap: 24 }}>
-      <div style={{ flex: 1 }}>
+    <section className="card meds-section">
+      <div className="meds-list">
         <h2>My Meds</h2>
         <p className="muted" style={{ marginTop: 4 }}>
           Active prescriptions saved from your scans. Turn on reminders per
@@ -416,20 +417,11 @@ export default function Meds() {
         </p>
 
         {toasts.length > 0 && (
-          <div
-            style={{
-              position: 'sticky',
-              top: 8,
-              zIndex: 10,
-              display: 'grid',
-              gap: 8,
-              marginBottom: 8,
-            }}
-          >
+          <div className="meds-toasts">
             {toasts.map((t) => (
               <div
                 key={t.id}
-                className="pill"
+                className="pill meds-pill"
                 style={{ background: '#0f172a', border: '1px solid #334155' }}
               >
                 {t.text}
@@ -440,6 +432,13 @@ export default function Meds() {
 
         {loadErr && (
           <p className="muted" style={{ marginTop: 8, color: '#f87171' }}>
+            <div
+              style={{
+                borderLeft: '1px solid #e3e8ee',
+                margin: '16px 0',
+                height: 'auto',
+              }}
+            />
             {loadErr}
           </p>
         )}
@@ -464,7 +463,6 @@ export default function Meds() {
               const on = !!remOn[id];
               const busy = busyId === id;
               const messages = Array.isArray(m.messages) ? m.messages : [];
-              // User-friendly status messages for end/reactivate actions
               let statusMsg = '';
               if (m.flags) {
                 if (m.flags.endReason) {
@@ -484,21 +482,11 @@ export default function Meds() {
               return (
                 <div
                   key={id}
-                  className="pill"
-                  style={{
-                    display: 'grid',
-                    gap: 10,
-                    opacity: m.endsAt ? 0.6 : 1,
-                  }}
+                  className={`pill meds-pill${
+                    m.endsAt ? ' meds-pill-ended' : ''
+                  }`}
                 >
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      gap: 8,
-                      flexWrap: 'wrap',
-                    }}
-                  >
+                  <div className="meds-pill-header">
                     <div>
                       <strong>{m.drug}</strong> — {m.doseMg} mg,{' '}
                       {m.frequencyPerDay}×/day
@@ -526,37 +514,13 @@ export default function Meds() {
                         </div>
                       )}
                       {messages.length > 0 && (
-                        <div
-                          className="ai-messages"
-                          style={{ margin: '8px 0' }}
-                        >
+                        <div className="meds-ai-messages">
                           {messages.map((msg, idx) => (
                             <div
                               key={idx}
-                              className={`ai-msg ai-msg-${
+                              className={`meds-ai-msg meds-ai-msg-${
                                 msg.severity || 'info'
                               }`}
-                              style={{
-                                background:
-                                  msg.severity === 'warning'
-                                    ? '#ffeaea'
-                                    : '#e6f7ff',
-                                color:
-                                  msg.severity === 'warning'
-                                    ? '#b00'
-                                    : '#0055a5',
-                                fontWeight: 'bold',
-                                fontSize: '1.05em',
-                                border:
-                                  '1px solid ' +
-                                  (msg.severity === 'warning'
-                                    ? '#b00'
-                                    : '#0055a5'),
-                                borderRadius: 6,
-                                padding: '6px 10px',
-                                marginBottom: 6,
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                              }}
                             >
                               <span style={{ marginRight: 6 }}>
                                 <strong>
@@ -570,13 +534,7 @@ export default function Meds() {
                       )}
                     </div>
                     {!m.endsAt ? (
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 8,
-                        }}
-                      >
+                      <div className="meds-reminder-controls">
                         <label className="muted" style={{ fontSize: 12 }}>
                           Reminder time
                         </label>
@@ -768,33 +726,17 @@ export default function Meds() {
             {aiSafetyError}
           </div>
         ) : aiSafetyInfo ? (
-          <div className="ai-messages" style={{ marginBottom: 12 }}>
+          <div className="meds-ai-messages" style={{ marginBottom: 12 }}>
             {(() => {
-              // Simple risk detection: if AI message contains 'risk', 'danger', 'caution', 'warning', or 'interaction', color red; else green
               const riskWords =
                 /risk|danger|caution|warning|interaction|unsafe|avoid|not recommended/i;
               const isRisk = riskWords.test(aiSafetyInfo);
-              const style = {
-                background: isRisk
-                  ? 'rgba(176,0,32,0.12)'
-                  : 'rgba(39,174,96,0.10)',
-                color: isRisk ? '#ffb4b4' : '#b6f7c6',
-                fontWeight: 500,
-                fontSize: '1em',
-                borderRadius: '10px',
-                padding: '14px 18px',
-                marginBottom: 8,
-                boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
-                border: 'none',
-                backdropFilter: 'blur(2px)',
-                transition: 'background 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                minHeight: '48px',
-                letterSpacing: '0.01em',
-              };
               return (
-                <div className="ai-msg ai-msg-info" style={style}>
+                <div
+                  className={`meds-ai-safety${
+                    isRisk ? '' : ' meds-ai-safety-safe'
+                  }`}
+                >
                   <span
                     style={{ flex: 1, color: isRisk ? '#ff4d4f' : '#2ecc40' }}
                   >

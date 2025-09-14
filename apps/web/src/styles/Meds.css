@@ -1,0 +1,89 @@
+/* Match AI Safety Info heading to My Meds heading */
+aside h3 {
+  color: #222e3a;
+  font-weight: 700;
+}
+/* Make main heading and med text more readable */
+.meds-list h2 {
+  color: #222e3a;
+  font-weight: 700;
+}
+.meds-pill strong {
+  color: #222e3a;
+  font-weight: 600;
+}
+/* Meds page styles */
+.meds-section {
+  display: flex;
+  gap: 24px;
+}
+.meds-list {
+  flex: 1;
+}
+.meds-toasts {
+  position: sticky;
+  top: 8px;
+  z-index: 10;
+  display: grid;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.meds-pill {
+  display: grid;
+  gap: 10px;
+}
+.meds-pill-ended {
+  opacity: 0.6;
+}
+.meds-pill-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.meds-reminder-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.meds-ai-messages {
+  margin: 8px 0;
+}
+.meds-ai-msg {
+  font-weight: bold;
+  font-size: 1.05em;
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.meds-ai-msg-warning {
+  background: #ffeaea;
+  color: #b00;
+  border: 1px solid #b00;
+}
+.meds-ai-msg-info {
+  background: #e6f7ff;
+  color: #0055a5;
+  border: 1px solid #0055a5;
+}
+/* AI safety info box styles */
+/* AI safety info box styles - force dark text for visibility */
+.meds-ai-safety,
+.meds-ai-safety-safe {
+  background: rgba(176, 0, 32, 0.12);
+  color: #11151a !important;
+  font-weight: 700 !important;
+  font-size: 1.08em;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: none;
+  backdrop-filter: blur(2px);
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  letter-spacing: 0.01em;
+}
