@@ -1,3 +1,36 @@
+.meds-reminder-controls input[type='time']::-webkit-datetime-edit-text {
+  color: var(--text) !important;
+  font-weight: 700;
+}
+.meds-reminder-controls input[type='time']::-ms-input {
+  color: var(--text) !important;
+  font-weight: 700;
+}
+.meds-reminder-controls input[type='time']::-webkit-datetime-edit {
+  color: var(--text) !important;
+  font-weight: 600;
+}
+.meds-reminder-controls input[type='time']::-ms-input {
+  color: var(--text) !important;
+  font-weight: 600;
+}
+.meds-reminder-controls input[type='time']::-moz-placeholder {
+  color: var(--text) !important;
+  font-weight: 600;
+}
+.meds-reminder-controls input[type='time'] {
+  color: var(--text) !important;
+  font-weight: 600;
+  background: #fff;
+}
+.meds-reminder-controls .btn {
+  display: inline-flex;
+  width: auto;
+  margin: 0;
+}
+.meds-reminder-controls .btn {
+  align-self: center;
+}
 /* Match AI Safety Info heading to My Meds heading */
 aside h3 {
   color: #222e3a;
@@ -31,6 +64,11 @@ aside h3 {
 .meds-pill {
   display: grid;
   gap: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 .meds-pill-ended {
   opacity: 0.6;
@@ -43,8 +81,31 @@ aside h3 {
 }
 .meds-reminder-controls {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 8px;
+  flex-direction: row;
+}
+
+.meds-reminder-controls .input[type='time'] {
+  height: 40px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  padding: 0 18px;
+  box-sizing: border-box;
+  align-self: center;
+  margin: 0;
+  display: inline-block;
+}
+
+.meds-reminder-controls .btn {
+  height: 40px;
+  font-size: 1rem;
+  border-radius: 8px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
 }
 .meds-ai-messages {
   margin: 8px 0;

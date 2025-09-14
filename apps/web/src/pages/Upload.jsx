@@ -119,12 +119,12 @@ export default function Upload() {
         <h2
           style={{
             textAlign: 'center',
-            color: '#2bb7b3',
+            color: '#254d4bff',
             fontWeight: 700,
             marginBottom: 20,
           }}
         >
-          Upload or snap a label
+          Upload your prescription
         </h2>
 
         <label className="file-picker">
@@ -134,7 +134,7 @@ export default function Upload() {
             capture="environment"
             onChange={onFile}
           />
-          <span>Select / Take a Photo</span>
+          <span>Select a Photo</span>
         </label>
 
         {imagePreview && (
@@ -145,7 +145,15 @@ export default function Upload() {
 
         {phase !== 'idle' && (
           <>
-            <p style={{ textAlign: 'center', fontSize: 14, marginBottom: 4 }}>
+            <p
+              style={{
+                textAlign: 'center',
+                fontSize: 15,
+                marginBottom: 4,
+                color: '#515151ff',
+                fontWeight: 600,
+              }}
+            >
               Processing...
             </p>
             <div className="progress">

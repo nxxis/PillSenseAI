@@ -4,6 +4,7 @@ import '../styles/Meds.css';
 import { API_URL } from '../lib/api';
 import Spinner from '../components/Spinner.jsx';
 import AlertModal from '../components/AlertModal.jsx';
+import MedCard from '../components/MedCard.jsx';
 
 function fmtDate(d) {
   if (!d) return '—';
@@ -487,169 +488,28 @@ export default function Meds() {
                   }
                 }
               }
-
               return (
-                <div
+                <MedCard
                   key={id}
-                  className={`pill meds-pill${
-                    m.endsAt ? ' meds-pill-ended' : ''
-                  }`}
-                >
-                  <div className="meds-pill-header">
-                    <div>
-                      <strong>{m.drug}</strong> — {m.doseMg} mg,{' '}
-                      {m.frequencyPerDay}×/day
-                      <div className="muted" style={{ fontSize: 12 }}>
-                        Started: {fmtDate(m.startedAt)} &nbsp;•&nbsp; Status:{' '}
-                        {m.endsAt ? 'Ended' : 'Active'}
-                      </div>
-                      {notesById[id] && (
-                        <div
-                          className="muted"
-                          style={{ fontSize: 12, margin: '6px 0' }}
-                        >
-                          <span style={{ color: '#2563eb' }}>Note:</span>{' '}
-                          {notesById[id] || 'No description available.'}
-                        </div>
-                      )}
-                      {m.timing && (
-                        <div className="muted" style={{ fontSize: 12 }}>
-                          Timing: {m.timing}
-                        </div>
-                      )}
-                      {statusMsg && (
-                        <div className="muted" style={{ fontSize: 12 }}>
-                          {statusMsg}
-                        </div>
-                      )}
-                      {messages.length > 0 && (
-                        <div className="meds-ai-messages">
-                          {messages.map((msg, idx) => (
-                            <div
-                              key={idx}
-                              className={`meds-ai-msg meds-ai-msg-${
-                                msg.severity || 'info'
-                              }`}
-                            >
-                              <span style={{ marginRight: 6 }}>
-                                <strong>
-                                  {msg.type === 'timing' ? 'Info:' : 'Note:'}
-                                </strong>
-                              </span>
-                              {msg.message}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    {!m.endsAt ? (
-                      <div className="meds-reminder-controls">
-                        <label className="muted" style={{ fontSize: 12 }}>
-                          Reminder time
-                        </label>
-                        <input
-                          type="time"
-                          className="input"
-                          style={{ width: 140, padding: '6px 10px' }}
-                          value={timeById[id] || '08:00'}
-                          onChange={(e) =>
-                            setTimeById((prev) => ({
-                              ...prev,
-                              [id]: e.target.value,
-                            }))
-                          }
-                          disabled={on || busy}
-                        />
-                        {!on ? (
-                          <button
-                            className="btn"
-                            onClick={() => enableReminder(m)}
-                            disabled={busy}
-                          >
-                            {busy ? 'Enabling…' : 'Enable reminders'}
-                          </button>
-                        ) : (
-                          <button
-                            className="btn"
-                            style={{ background: '#374151' }}
-                            onClick={() =>
-                              setModal({ open: true, type: 'reminder', med: m })
-                            }
-                            disabled={busy}
-                          >
-                            {busy ? 'Disabling…' : 'Disable'}
-                          </button>
-                        )}
-                        {/* Disable medication button */}
-                        <button
-                          className="btn"
-                          style={{ background: '#f59e42', color: '#222' }}
-                          onClick={() =>
-                            setModal({ open: true, type: 'medication', med: m })
-                          }
-                          disabled={busy}
-                        >
-                          {busy ? 'Disabling…' : 'Disable medication'}
-                        </button>
-                      </div>
-                    ) : (
-                      <div
-                        className="muted"
-                        style={{ fontSize: 12, marginTop: 8 }}
-                      >
-                        This medication is ended.
-                        <br />
-                        <span style={{ color: '#f59e42' }}>
-                          You can reactivate this medication if you need to
-                          resume it.
-                        </span>
-                        <br />
-                        <button
-                          className="btn"
-                          style={{
-                            background: '#38bdf8',
-                            color: '#222',
-                            marginTop: 8,
-                          }}
-                          onClick={async () => {
-                            setBusyId(id);
-                            try {
-                              const res = await fetch(
-                                `${API_URL}/prescriptions/${id}/reactivate`,
-                                {
-                                  method: 'PATCH',
-                                  headers: headersJSON,
-                                  body: JSON.stringify({
-                                    reason: 'reactivated_by_user',
-                                  }),
-                                }
-                              );
-                              const data = await res.json();
-                              if (res.ok && data.ok) {
-                                pushToast(`Medication reactivated: ${m.drug}`);
-                                load();
-                              } else {
-                                alert(
-                                  data.error ||
-                                    'Failed to reactivate medication.'
-                                );
-                              }
-                            } catch (e) {
-                              alert(
-                                'Network error while reactivating medication.'
-                              );
-                            } finally {
-                              setBusyId(null);
-                            }
-                          }}
-                          disabled={busy}
-                        >
-                          {busy ? 'Reactivating…' : 'Reactivate medication'}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                  m={m}
+                  id={id}
+                  on={on}
+                  busy={busy}
+                  time={timeById[id]}
+                  notes={notesById[id]}
+                  statusMsg={statusMsg}
+                  messages={messages}
+                  enableReminder={enableReminder}
+                  disableReminder={disableReminder}
+                  setModal={setModal}
+                  setTimeById={setTimeById}
+                  headersJSON={headersJSON}
+                  API_URL={API_URL}
+                  pushToast={pushToast}
+                  load={load}
+                  busyId={busyId}
+                  setBusyId={setBusyId}
+                />
               );
             })}
           </div>
