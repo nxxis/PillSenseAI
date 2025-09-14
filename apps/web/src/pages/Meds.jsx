@@ -80,62 +80,7 @@ function toastKey(rem) {
 }
 
 export default function Meds() {
-  // WebSocket for real-time reminders
-  const [reminderAlert, setReminderAlert] = useState({ open: false, text: '' });
-  // Play longer sound for reminder using audio file
-  const audioRef = useRef(null);
-  function playReminderSound(loop = false) {
-    try {
-      if (audioRef.current) {
-        audioRef.current.loop = loop;
-        audioRef.current.currentTime = 0;
-        audioRef.current.play();
-      }
-    } catch {}
-  }
-
-  function stopReminderSound() {
-    try {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-        audioRef.current.loop = false;
-      }
-    } catch {}
-  }
-
-  useEffect(() => {
-    const ws = new window.WebSocket('ws://localhost:5051');
-    ws.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data);
-        if (msg.type === 'reminder' && msg.reminder) {
-          const r = msg.reminder;
-          const t = new Date(r.nextAtISO);
-          const hhmm = isNaN(t)
-            ? ''
-            : ` at ${t.toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}`;
-          setReminderAlert({
-            open: true,
-            text: `⏰ Time to take ${r.drug} (${r.doseMg} mg)${hhmm}`,
-          });
-          playReminderSound(true); // loop sound
-        }
-      } catch {}
-    };
-    ws.onopen = () => {
-      console.log('[WS] Connected for reminders');
-    };
-    ws.onclose = () => {
-      console.log('[WS] Disconnected from reminders');
-    };
-    return () => {
-      ws.close();
-    };
-  }, []);
+  // ...existing code...
   // Modal state for confirmation dialogs
   const [modal, setModal] = useState({ open: false, type: '', med: null });
   // AI safety info bar state
@@ -563,24 +508,7 @@ export default function Meds() {
         }}
         onCancel={() => setModal({ open: false, type: '', med: null })}
       />
-      {/* AlertModal for reminders */}
-      <AlertModal
-        open={reminderAlert.open}
-        title="Reminder"
-        message={reminderAlert.text}
-        confirmText="OK"
-        cancelText=""
-        onConfirm={() => {
-          setReminderAlert({ open: false, text: '' });
-          stopReminderSound();
-        }}
-        onCancel={() => {
-          setReminderAlert({ open: false, text: '' });
-          stopReminderSound();
-        }}
-      />
-      {/* Audio element for reminder sound */}
-      <audio ref={audioRef} src="/reminder.mp3" preload="auto" />
+      {/* ...existing code... */}
       <aside style={{ minWidth: 320, maxWidth: 400 }}>
         <h2
           style={{
