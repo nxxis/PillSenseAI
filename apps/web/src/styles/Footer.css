@@ -1,0 +1,21 @@
+/* Footer.css - Modern, fixed, blended footer for PillSenseAI */
+
+.footer {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  margin: 0;
+  z-index: 10;
+  transition: background 0.3s;
+  border: none !important;
+  box-shadow: none !important;
+}
+.footer-inner {
+  text-align: center;
+  padding: 20px;
+  color: var(--muted);
+  font-size: 14px;
+}

@@ -78,7 +78,16 @@ body {
 
 .footer {
   border-top: 1px solid var(--border);
-  margin-top: 32px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100vw;
+  margin-top: 0;
+  z-index: 10;
+  box-shadow: 0 -2px 16px rgba(43, 183, 179, 0.08);
+  transition: background 0.3s;
 }
 .footer-inner {
   text-align: center;
