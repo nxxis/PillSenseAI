@@ -91,6 +91,7 @@ export default function Header() {
     navigate('/login');
   };
 
+  if (!user) return null;
   return (
     <header className="header">
       <div className="header-inner">
@@ -108,80 +109,69 @@ export default function Header() {
             Profile
           </NavLink>
         </nav>
-        {user ? (
-          <div
-            ref={dropdownRef}
+        <div
+          ref={dropdownRef}
+          style={{
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+          }}
+        >
+          <span
             style={{
-              position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
+              color: '#9bb0c3',
+              fontWeight: 600,
+              cursor: 'pointer',
+              padding: '6px 14px',
+              borderRadius: 8,
+              background: 'rgba(176, 0, 32, 0.04)',
             }}
+            onClick={() => setShowLogout((v) => !v)}
           >
-            <span
+            {user.name || user.email}
+          </span>
+          {showLogout && (
+            <div
               style={{
-                color: '#9bb0c3',
-                fontWeight: 600,
-                cursor: 'pointer',
-                padding: '6px 14px',
+                position: 'absolute',
+                top: 'calc(100% + 4px)',
+                right: 0,
+                background: '#fff',
+                color: '#222e3a',
+                border: '1px solid #e2e8f0',
                 borderRadius: 8,
-                background: 'rgba(176, 0, 32, 0.04)',
+                boxShadow: '0 2px 12px rgba(43,179,179,0.10)',
+                minWidth: 90,
+                zIndex: 100,
+                padding: '4px 0',
+                textAlign: 'left',
               }}
-              onClick={() => setShowLogout((v) => !v)}
             >
-              {user.name || user.email}
-            </span>
-            {showLogout && (
-              <div
+              <button
+                className="btn btn-muted"
                 style={{
-                  position: 'absolute',
-                  top: 'calc(100% + 4px)',
-                  right: 0,
-                  background: '#fff',
+                  width: '100%',
+                  background: 'none',
                   color: '#222e3a',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: 8,
-                  boxShadow: '0 2px 12px rgba(43,179,179,0.10)',
-                  minWidth: 90,
-                  zIndex: 100,
-                  padding: '4px 0',
-                  textAlign: 'left',
+                  fontWeight: 500,
+                  fontSize: 15,
+                  border: 'none',
+                  borderRadius: 0,
+                  padding: '7px 12px',
+                  textAlign: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
                 }}
+                onClick={handleLogout}
               >
-                <button
-                  className="btn btn-muted"
-                  style={{
-                    width: '100%',
-                    background: 'none',
-                    color: '#222e3a',
-                    fontWeight: 500,
-                    fontSize: 15,
-                    border: 'none',
-                    borderRadius: 0,
-                    padding: '7px 12px',
-                    textAlign: 'center',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                  }}
-                  onClick={handleLogout}
-                >
-                  Logout
-                </button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <nav className="nav">
-            <NavLink to="/login" className="nav-link">
-              Login
-            </NavLink>
-            <NavLink to="/register" className="nav-link">
-              Register
-            </NavLink>
-          </nav>
-        )}
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
