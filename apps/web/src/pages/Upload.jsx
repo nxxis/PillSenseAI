@@ -114,51 +114,62 @@ export default function Upload() {
   };
 
   return (
-    <section className="card">
-      <h2>Upload or snap a label</h2>
+    <div className="upload-center">
+      <section className="card">
+        <h2
+          style={{
+            textAlign: 'center',
+            color: '#2bb7b3',
+            fontWeight: 700,
+            marginBottom: 20,
+          }}
+        >
+          Upload or snap a label
+        </h2>
 
-      <label className="file-picker">
-        <input
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={onFile}
-        />
-        <span>Select / Take a Photo</span>
-      </label>
+        <label className="file-picker">
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={onFile}
+          />
+          <span>Select / Take a Photo</span>
+        </label>
 
-      {imagePreview && (
-        <div className="preview">
-          <img src={imagePreview} alt="Label preview" />
-        </div>
-      )}
-
-      {phase !== 'idle' && (
-        <>
-          <p style={{ textAlign: 'center', fontSize: 14, marginBottom: 4 }}>
-            Processing...
-          </p>
-          <div className="progress">
-            <div
-              className="bar"
-              style={{
-                width: `${phase === 'uploading' ? uploadPct : ocrPct}%`,
-              }}
-            />
+        {imagePreview && (
+          <div className="preview" style={{ margin: '0 auto', maxWidth: 320 }}>
+            <img src={imagePreview} alt="Label preview" />
           </div>
-          <p className="muted" style={{ fontSize: 14, textAlign: 'center' }}>
-            {phase === 'uploading' ? uploadPct : ocrPct}%
-          </p>
-        </>
-      )}
+        )}
 
-      <button
-        className="btn"
-        disabled={!file || phase !== 'idle'}
-        onClick={continueOcr}
-      >
-        {phase === 'idle' ? 'Continue' : 'Working…'}
-      </button>
-    </section>
+        {phase !== 'idle' && (
+          <>
+            <p style={{ textAlign: 'center', fontSize: 14, marginBottom: 4 }}>
+              Processing...
+            </p>
+            <div className="progress">
+              <div
+                className="bar"
+                style={{
+                  width: `${phase === 'uploading' ? uploadPct : ocrPct}%`,
+                }}
+              />
+            </div>
+            <p className="muted" style={{ fontSize: 14, textAlign: 'center' }}>
+              {phase === 'uploading' ? uploadPct : ocrPct}%
+            </p>
+          </>
+        )}
+
+        <button
+          className="btn"
+          disabled={!file || phase !== 'idle'}
+          onClick={continueOcr}
+        >
+          {phase === 'idle' ? 'Continue' : 'Working…'}
+        </button>
+      </section>
+    </div>
   );
 }
