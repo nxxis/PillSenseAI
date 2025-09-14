@@ -102,7 +102,7 @@ export default function Result() {
   return (
     <section className="card">
       <section className="card">
-        <h2>Parsed Medications</h2>
+        <h2 style={{ color: 'black' }}>Parsed Medications</h2>
 
         <div className="result-layout">
           {imageUrl && (
@@ -130,22 +130,31 @@ export default function Result() {
               </div>
             ) : (
               meds.map((p, i) => (
-                <div key={i} className="pill" style={{ position: 'relative' }}>
-                  <div>
-                    <strong>Drug:</strong> {p.drug || '—'}
+                <div
+                  key={i}
+                  className="meds-pill"
+                  style={{ position: 'relative' }}
+                >
+                  <div className="meds-pill-header">
+                    <div>
+                      <strong>{p.drug || '—'}</strong>
+                      <span
+                        style={{
+                          color: '#222e3a',
+                          fontWeight: 500,
+                          marginLeft: 6,
+                        }}
+                      >
+                        {Number(p.doseMg) || 0} mg,{' '}
+                        {Number(p.frequencyPerDay) || 1}×/day
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <strong>Dose:</strong> {Number(p.doseMg) || 0} mg
-                  </div>
-                  <div>
-                    <strong>Frequency:</strong> {Number(p.frequencyPerDay) || 1}{' '}
-                    ×/day
-                    {p.timing && (
-                      <div>
-                        <strong>Timing:</strong> {p.timing}
-                      </div>
-                    )}
-                  </div>
+                  {p.timing && (
+                    <div className="muted" style={{ fontSize: 12 }}>
+                      <strong>Timing:</strong> {p.timing}
+                    </div>
+                  )}
                   <button
                     className="btn"
                     style={{ marginTop: 8, minWidth: 120 }}
@@ -284,16 +293,45 @@ export default function Result() {
               </div>
             )}
 
-            <div className="ai-note">
-              <p>
+            <div
+              className="meds-pill"
+              style={{
+                background: '#fffbe6',
+                color: '#b45309',
+                fontWeight: 'bold',
+                padding: '18px',
+                borderRadius: 12,
+                border: '1px solid #fde68a',
+                marginBottom: 8,
+              }}
+            >
+              <p style={{ margin: 0 }}>
                 <strong>Heads up:</strong> Interaction/overdose checks &
                 plain-language explanations show up after saving meds. Manage
                 reminders per medicine on the <em>My Meds</em> page.
               </p>
             </div>
 
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <Link to="/meds" className="btn">
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                marginTop: '4px',
+                paddingTop: 0,
+              }}
+            >
+              <Link
+                to="/meds"
+                className="btn"
+                style={{
+                  fontSize: '0.92em',
+                  padding: '6px 18px',
+                  borderRadius: 8,
+                  width: 'fit-content',
+                  minWidth: 'unset',
+                  alignSelf: 'center',
+                }}
+              >
                 Go to My Meds
               </Link>
             </div>

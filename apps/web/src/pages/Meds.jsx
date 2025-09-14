@@ -465,7 +465,7 @@ export default function Meds() {
             <Spinner size={32} />
           </div>
         ) : items.length === 0 ? (
-          <p style={{ marginTop: 12 }}>No prescriptions yet.</p>
+          <p style={{ marginTop: 12, color: 'black' }}>No prescriptions yet.</p>
         ) : (
           <div style={{ display: 'grid', gap: 12, marginTop: 12 }}>
             {items.map((m) => {
