@@ -52,14 +52,49 @@ export default function Result() {
   if (meds.length === 0) {
     return (
       <section className="card">
-        <h2>No medications found</h2>
-        <p>
+        <h2
+          style={{
+            color: '#222e3a',
+            fontWeight: 700,
+            textShadow: '0 1px 8px #fff',
+          }}
+        >
+          No medications found
+        </h2>
+        <p
+          style={{
+            color: '#222e3a',
+            fontWeight: 500,
+            textShadow: '0 1px 8px #fff',
+          }}
+        >
           Sorry, we couldn't recognize any medication from your image. Please
           try a clearer photo or check the label for legibility.
         </p>
-        <Link to="/upload" className="btn">
-          Try Again
-        </Link>
+        <div
+          style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}
+        >
+          <Link
+            to="/upload"
+            className="btn"
+            style={{
+              width: 'auto',
+              minWidth: 120,
+              padding: '12px 32px',
+              borderRadius: 10,
+              fontWeight: 600,
+              fontSize: 16,
+              boxShadow: '0 2px 8px rgba(43,179,179,0.08)',
+              background: 'linear-gradient(90deg, #2563eb, #60a5fa)',
+              color: '#fff',
+              textAlign: 'center',
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Try Again
+          </Link>
+        </div>
       </section>
     );
   }
