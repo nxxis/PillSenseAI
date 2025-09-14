@@ -80,7 +80,10 @@ function toastKey(rem) {
 }
 
 export default function Meds() {
-  // ...existing code...
+  // Success alert modal for enabling reminders
+  const [enableAlert, setEnableAlert] = useState({ open: false, text: '' });
+  // Success alert modal for disabling reminders
+  const [disableAlert, setDisableAlert] = useState({ open: false, text: '' });
   // Modal state for confirmation dialogs
   const [modal, setModal] = useState({ open: false, type: '', med: null });
   // AI safety info bar state
@@ -307,7 +310,10 @@ export default function Meds() {
         localStorage.getItem(keyForMed(m)) ||
         isoToLocalHhmm(newRem?.nextAtISO || nextAtISO);
       setTimeById((prev) => ({ ...prev, [medId]: uiTime }));
-      // pushToast(`✅ Reminders enabled for ${m.drug} (${m.doseMg} mg)`); // Only show reminders from WebSocket event
+      setEnableAlert({
+        open: true,
+        text: `Reminder enabled for ${m.drug} (${m.doseMg} mg)`,
+      });
     } catch (e) {
       console.error(e);
       alert('Network error while enabling reminder.');
@@ -342,9 +348,12 @@ export default function Meds() {
         delete c[medId];
         return c;
       });
+      setDisableAlert({
+        open: true,
+        text: `Reminder disabled for ${m.drug} (${m.doseMg} mg)`,
+      });
       // Optionally clear the saved time:
       // localStorage.removeItem(keyForMed(m));
-      pushToast(`🛑 Reminders disabled for ${m.drug}`);
     } catch (e) {
       console.error(e);
       alert('Network error while disabling reminder.');
@@ -382,6 +391,84 @@ export default function Meds() {
                 {t.text}
               </div>
             ))}
+          </div>
+        )}
+        {/* Success alert modal for enabling reminders */}
+        {enableAlert.open && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              zIndex: 9999,
+              background: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100vh',
+            }}
+          >
+            <div
+              style={{
+                background: '#fff',
+                padding: 32,
+                borderRadius: 12,
+                boxShadow: '0 2px 16px #0002',
+                minWidth: 320,
+                textAlign: 'center',
+              }}
+            >
+              <h2 style={{ color: '#222', marginBottom: 16 }}>Success</h2>
+              <p style={{ color: '#222', marginBottom: 24 }}>
+                {enableAlert.text}
+              </p>
+              <button
+                className="btn"
+                onClick={() => setEnableAlert({ open: false, text: '' })}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        )}
+        {/* Success alert modal for disabling reminders */}
+        {disableAlert.open && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              zIndex: 9999,
+              background: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100vh',
+            }}
+          >
+            <div
+              style={{
+                background: '#fff',
+                padding: 32,
+                borderRadius: 12,
+                boxShadow: '0 2px 16px #0002',
+                minWidth: 320,
+                textAlign: 'center',
+              }}
+            >
+              <h2 style={{ color: '#222', marginBottom: 16 }}>Success</h2>
+              <p style={{ color: '#222', marginBottom: 24 }}>
+                {disableAlert.text}
+              </p>
+              <button
+                className="btn"
+                onClick={() => setDisableAlert({ open: false, text: '' })}
+              >
+                OK
+              </button>
+            </div>
           </div>
         )}
 

@@ -123,7 +123,7 @@ export default function App() {
                 minWidth: 320,
               }}
             >
-              <h2>Reminder</h2>
+              <h2 style={{ color: '#222' }}>Reminder</h2>
               <p style={{ color: '#222' }}>{reminderAlert.text}</p>
               <button
                 className="btn"
