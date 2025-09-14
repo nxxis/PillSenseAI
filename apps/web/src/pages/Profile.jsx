@@ -11,6 +11,7 @@ export default function Profile() {
     open: false,
     title: '',
     message: '',
+    color: '#222',
   });
 
   useEffect(() => {
@@ -46,12 +47,14 @@ export default function Profile() {
         open: true,
         title: 'Success',
         message: 'Profile saved.',
+        color: '#030303ff',
       });
     } else {
       setAlertModal({
         open: true,
         title: 'Error',
         message: data.error || 'Failed to save.',
+        color: '',
       });
     }
   };
@@ -114,6 +117,7 @@ export default function Profile() {
         open={alertModal.open}
         title={alertModal.title}
         message={alertModal.message}
+        color={alertModal.color}
         confirmText="OK"
         cancelText=""
         onConfirm={() => setAlertModal({ ...alertModal, open: false })}
