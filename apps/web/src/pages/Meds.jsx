@@ -408,7 +408,16 @@ export default function Meds() {
   };
 
   return (
-    <section className="card meds-section">
+    <section
+      className="card meds-section"
+      style={{
+        padding: '48px 48px',
+        minWidth: '900px',
+        maxWidth: '1200px',
+        margin: '40px auto',
+        boxSizing: 'border-box',
+      }}
+    >
       <div className="meds-list">
         <h2>My Meds</h2>
         <p className="muted" style={{ marginTop: 4 }}>
@@ -713,20 +722,36 @@ export default function Meds() {
       {/* Audio element for reminder sound */}
       <audio ref={audioRef} src="/reminder.mp3" preload="auto" />
       <aside style={{ minWidth: 320, maxWidth: 400 }}>
-        <h3 style={{ marginBottom: 8 }}>AI Safety Info</h3>
+        <h2
+          style={{
+            marginBottom: 8,
+            fontSize: '1.5rem',
+            fontWeight: 700,
+            color: '#222',
+          }}
+        >
+          AI Safety Info
+        </h2>
         {aiSafetyLoading ? (
-          <div className="muted" style={{ fontSize: 15, marginBottom: 12 }}>
+          <div style={{ fontSize: '1rem', marginBottom: 12, color: '#222' }}>
             Loading AI safety info…
           </div>
         ) : aiSafetyError ? (
           <div
-            className="muted"
-            style={{ fontSize: 15, marginBottom: 12, color: '#b00' }}
+            style={{
+              fontSize: '1rem',
+              marginBottom: 12,
+              color: '#b00',
+              fontWeight: 500,
+            }}
           >
             {aiSafetyError}
           </div>
         ) : aiSafetyInfo ? (
-          <div className="meds-ai-messages" style={{ marginBottom: 12 }}>
+          <div
+            className="meds-ai-messages"
+            style={{ marginBottom: 12, fontSize: '1rem', color: '#222' }}
+          >
             {(() => {
               const riskWords =
                 /risk|danger|caution|warning|interaction|unsafe|avoid|not recommended/i;
@@ -738,7 +763,12 @@ export default function Meds() {
                   }`}
                 >
                   <span
-                    style={{ flex: 1, color: isRisk ? '#ff4d4f' : '#2ecc40' }}
+                    style={{
+                      flex: 1,
+                      color: isRisk ? '#ff4d4f' : '#222',
+                      fontSize: '1rem',
+                      fontWeight: 400,
+                    }}
                   >
                     {aiSafetyInfo}
                   </span>
@@ -747,7 +777,7 @@ export default function Meds() {
             })()}
           </div>
         ) : (
-          <div className="muted" style={{ fontSize: 15, marginBottom: 12 }}>
+          <div style={{ fontSize: '1rem', marginBottom: 12, color: '#222' }}>
             No AI safety info available for your current active medications.
           </div>
         )}
