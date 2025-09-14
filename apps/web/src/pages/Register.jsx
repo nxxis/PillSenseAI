@@ -15,8 +15,12 @@ export default function Register() {
   const [gender, setGender] = useState('unspecified');
 
   const [err, setErr] = useState('');
-  const { register, loading } = useAuth();
+  const { register, loading, user } = useAuth();
   const nav = useNavigate();
+  if (user) {
+    nav('/upload', { replace: true });
+    return null;
+  }
 
   const onSubmit = async (e) => {
     e.preventDefault();

@@ -9,7 +9,12 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [err, setErr] = useState('');
-  const { login, loading } = useAuth();
+  const { login, loading, user } = useAuth();
+  // Redirect if already logged in
+  if (user) {
+    nav('/upload', { replace: true });
+    return null;
+  }
   const nav = useNavigate();
   const loc = useLocation();
   const from = loc.state?.from || '/upload';
